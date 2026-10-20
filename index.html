@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b1a">
+<title>Thiệp mời Lễ Tốt Nghiệp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Be Vietnam Pro', system-ui, sans-serif;
+    --round: ui-rounded, 'SF Pro Rounded', var(--font);
+    /* Spring kiểu iOS (CSS linear()) — nảy nhẹ rồi dừng */
+    --spring: linear(0, .009, .035 2.1%, .141, .281 6.7%, .723 12.9%, .938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, .991, .977 51%, .974 53.8%, .975 57.1%, .997 69.8%, 1.003 76.9%, 1);
+    --snappy: linear(0, .077 2.5%, .287 5.5%, .579 9.4%, .797 13.3%, .942 17.6%, 1.03 22.3%, 1.059 26.1%, 1.063 30.3%, 1.03 40.4%, 1.006 51.5%, .997 64.8%, 1);
+    --red: #ff453a; --blue: #0a84ff; --green: #30d158;
+    --pad: max(20px, env(safe-area-inset-left));
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font); color: #fff; background: #0b0b1a; -webkit-font-smoothing: antialiased; letter-spacing: -.01em; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+
+  /* ---------- Wallpaper động (để kính có thứ mà khúc xạ) ---------- */
+  .wall { position: fixed; inset: -10%; z-index: -1; background: #0b0b1a; overflow: hidden; }
+  .wall i { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; filter: blur(60px); opacity: .85; animation: drift 22s ease-in-out infinite alternate; }
+  .wall i:nth-child(1) { background: #ff2d55; left: -15%; top: -10%; }
+  .wall i:nth-child(2) { background: #5e5ce6; right: -20%; top: 10%; animation-duration: 26s; animation-delay: -6s; }
+  .wall i:nth-child(3) { background: #ff9f0a; left: 10%; bottom: -25%; animation-duration: 30s; animation-delay: -12s; }
+  .wall i:nth-child(4) { background: #64d2ff; right: 0; bottom: -10%; width: 40vmax; height: 40vmax; animation-duration: 18s; }
+  @keyframes drift { 50% { transform: translate(12vw, 8vh) scale(1.15); } 100% { transform: translate(-8vw, 14vh) scale(.9); } }
+
+  /* ---------- Liquid Glass ---------- */
+  .glass {
+    position: relative; isolation: isolate; border-radius: 28px;
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(16px) saturate(180%) brightness(1.08); -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(1.08);
+    box-shadow:
+      inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55),   /* mép sáng trên-trái */
+      inset -1px -1px 0 -.5px rgba(255,255,255,.25),     /* mép dưới-phải */
+      inset 0 0 22px rgba(255,255,255,.07),              /* độ dày kính */
+      0 12px 40px -8px rgba(0,0,0,.35);
+    transition: transform .6s var(--spring), scale .45s var(--spring), box-shadow .3s;
+  }
+  /* Phản quang theo ngón tay/chuột */
+  .glass::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+    background: radial-gradient(circle at var(--mx, 30%) var(--my, 0%), rgba(255,255,255,.22), transparent 55%);
+    opacity: var(--lit, .6); transition: opacity .3s;
+  }
+  .glass:hover { --lit: 1; }
+  /* Khúc xạ thật (chỉ Chromium hỗ trợ backdrop-filter: url()) */
+  /* ponytail: chỉ vài khối lớn để giữ 60fps; muốn nhiều hơn thì thêm selector */
+  .refract :is(.hero, .tabbar, .notif, .seg) { backdrop-filter: url(#liquid) blur(10px) saturate(180%) brightness(1.08); }
+  .press:active { scale: .95; }
+  /* ---------- Màn hình khoá ---------- */
+  .lock {
+    position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; padding: 70px var(--pad) 40px;
+    background: rgba(11,11,26,.25); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    transition: transform .9s var(--snappy), opacity .6s, filter .6s;
+  }
+  .lock.open { transform: translateY(-105%); opacity: 0; filter: blur(10px); pointer-events: none; }
+  .lock .date { font-size: 1.15rem; font-weight: 600; opacity: .9; text-transform: capitalize; }
+  .lock .clock {
+    font-family: var(--round); font-size: clamp(4.5rem, 24vw, 8rem); font-weight: 700; line-height: 1; letter-spacing: -.04em; margin-top: 2px;
+    color: rgba(255,255,255,.25); -webkit-text-stroke: 1px rgba(255,255,255,.6); text-shadow: 0 2px 30px rgba(255,255,255,.25);
+  }
+  .notif { width: min(100%, 380px); margin-top: auto; display: flex; gap: 12px; padding: 14px 16px; text-align: left; border-radius: 24px; animation: drop .9s var(--spring) .5s backwards; }
+  .notif .app { flex: none; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 22px; background: linear-gradient(135deg, #ff375f, #5e5ce6); }
+  .notif b { font-size: .95rem; } .notif small { float: right; opacity: .6; font-size: .8rem; }
+  .notif p { font-size: .92rem; opacity: .85; margin-top: 2px; }
+  @keyframes drop { from { transform: translateY(-30px) scale(.9); opacity: 0; } }
+  .swipe { margin-top: 26px; font-size: .9rem; opacity: .7; animation: breathe 2.4s ease-in-out infinite; }
+  .home-bar { width: 134px; height: 5px; border-radius: 3px; background: #fff; margin-top: 12px; }
+  @keyframes breathe { 50% { opacity: .25; } }
+
+  /* ---------- Dynamic Island ---------- */
+  .island {
+    position: fixed; top: 10px; left: 50%; z-index: 40; transform: translateX(-50%);
+    width: 210px; height: 38px; border-radius: 22px; background: #000; overflow: hidden;
+    display: flex; align-items: center; padding: 0 14px; font-size: .85rem; font-weight: 600;
+    transition: width .6s var(--spring), height .6s var(--spring), border-radius .6s var(--spring);
+    box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  }
+  .island .dot { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: linear-gradient(135deg, #ff375f, #5e5ce6); }
+  .island .mini { color: var(--green); font-variant-numeric: tabular-nums; }
+  .island .row1 { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+  .island .full { display: none; }
+  .island.big { width: min(92vw, 380px); height: 92px; border-radius: 34px; }
+  .island.big .row1 { display: none; }
+  .island.big .full { display: flex; width: 100%; align-items: center; gap: 14px; animation: fade .4s .15s backwards; }
+  .island .full .dot { width: 46px; height: 46px; font-size: 24px; border-radius: 14px; }
+  .island .full p { flex: 1; line-height: 1.3; } .island .full small { display: block; opacity: .6; font-weight: 500; }
+  .island .full b { font-family: var(--round); font-size: 1.5rem; color: var(--green); font-variant-numeric: tabular-nums; }
+  @keyframes fade { from { opacity: 0; filter: blur(6px); } }
+  /* ---------- Nội dung ---------- */
+  main { max-width: 560px; margin: 0 auto; padding: 72px var(--pad) 140px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .sec-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; margin: 30px 4px 2px; scroll-margin-top: 70px; }
+  .hero { padding: 34px 24px 24px; text-align: center; border-radius: 36px; }
+  .hero .cap { font-size: 56px; display: inline-block; animation: bob 3s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-6px) rotate(-6deg); } }
+  .hero .to { font-size: .95rem; opacity: .75; margin-top: 8px; min-height: 1.3em; }
+  .hero h1 { font-size: clamp(2.4rem, 11vw, 3.4rem); font-weight: 800; letter-spacing: -.045em; line-height: 1.05; margin: 6px 0 10px; }
+  .hero .name { font-family: var(--round); font-size: 1.5rem; font-weight: 700; }
+  .hero .deg { opacity: .7; margin-top: 4px; font-size: .95rem; }
+  .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 24px; }
+  .act { display: grid; justify-items: center; gap: 6px; padding: 14px 6px 12px; border-radius: 22px; font-size: .8rem; font-weight: 600; }
+  .act span { font-size: 22px; }
+  .act.primary { background: rgba(10,132,255,.5); }
+
+  /* Widgets */
+  .widgets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .w { padding: 18px; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 26px; }
+  .w .k { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--red); }
+  .w .v { font-family: var(--round); font-size: 3.4rem; font-weight: 700; line-height: 1; letter-spacing: -.03em; }
+  .w .s { font-size: .9rem; opacity: .75; }
+  .w.wide { grid-column: span 2; min-height: 0; gap: 14px; }
+  .cd { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; }
+  .cd b { display: block; font-family: var(--round); font-size: clamp(2rem, 9vw, 2.8rem); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .cd b.tick { animation: tick .5s var(--spring); }
+  @keyframes tick { from { transform: translateY(-40%); opacity: 0; filter: blur(4px); } }
+  .cd span { font-size: .78rem; opacity: .65; }
+  .venue-row { display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 14px; }
+  .pin { flex: none; width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; font-size: 26px; background: linear-gradient(135deg, #30d158, #0a84ff); }
+
+  /* Danh sách kiểu Settings */
+  .list { border-radius: 26px; overflow: hidden; }
+  .item { display: flex; gap: 14px; align-items: flex-start; padding: 14px 18px; }
+  .item + .item { border-top: .5px solid rgba(255,255,255,.14); }
+  .item .ic { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 16px; }
+  .item b { display: block; font-size: 1rem; font-weight: 600; } .item p { font-size: .88rem; opacity: .72; margin-top: 2px; line-height: 1.4; }
+  .item time { margin-left: auto; padding-left: 8px; flex: none; font-family: var(--round); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .item.now { background: rgba(48,209,88,.14); }
+  /* Segmented control (thanh trượt kính) */
+  .seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; }
+  .seg button { position: relative; z-index: 1; padding: 9px; font-weight: 600; font-size: .9rem; border-radius: 999px; transition: opacity .3s; opacity: .6; }
+  .seg button[aria-selected="true"] { opacity: 1; }
+  .seg .thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: rgba(255,255,255,.2);
+    box-shadow: inset 1px 1px 0 rgba(255,255,255,.5); transition: transform .55s var(--spring); }
+  .seg[data-i="1"] .thumb { transform: translateX(100%); }
+  .panel[hidden] { display: none; }
+  .panel { animation: fade .45s; }
+
+  /* Sheet kéo từ dưới lên */
+  .sheet-bg { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .4s; }
+  .sheet-bg.on { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; z-index: 61; left: 50%; bottom: 8px; width: min(96vw, 520px); max-height: 82svh; overflow: auto;
+    padding: 10px 20px 28px; border-radius: 38px; background: rgba(30,30,45,.6);
+    transform: translate(-50%, 110%); transition: transform .65s var(--spring); }
+  .sheet.on { transform: translate(-50%, 0); }
+  .sheet .grab { display: block; width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.35); margin: 0 auto 14px; }
+  .sheet h3 { font-size: 1.3rem; margin-bottom: 12px; }
+  .sheet table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  .sheet td { padding: 10px 4px; border-top: .5px solid rgba(255,255,255,.14); }
+  .sheet td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sheet .item { padding: 12px 0; }
+
+  /* Tab bar nổi, thu nhỏ khi cuộn xuống */
+  .tabbar { position: fixed; z-index: 30; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    display: flex; gap: 2px; padding: 6px; border-radius: 999px; transition: transform .5s var(--spring); }
+  .tabbar.min { transform: translateX(-50%) translateY(8px) scale(.84); }
+  .tabbar a { display: grid; justify-items: center; padding: 6px 14px; border-radius: 999px; font-size: .68rem; font-weight: 600; opacity: .7; transition: background .3s, opacity .3s; }
+  .tabbar a span { font-size: 20px; line-height: 1.1; }
+  .tabbar a.on { opacity: 1; background: rgba(255,255,255,.18); }
+
+  .reveal { opacity: 0; transform: translateY(30px) scale(.96); filter: blur(8px); transition: opacity .7s, filter .7s, transform .9s var(--spring), scale .45s var(--spring); }
+  .reveal.in { opacity: 1; transform: none; filter: none; }
+  footer { text-align: center; font-size: .78rem; opacity: .55; line-height: 1.6; padding-top: 20px; }
+  footer a { text-decoration: underline; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01s !important; }
+    .reveal { opacity: 1; transform: none; filter: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wall" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <!-- Bản đồ khúc xạ cho Liquid Glass (Chromium) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="liquid" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".008 .012" numOctaves="2" seed="7" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="2" result="b"/>
+      <feDisplacementMap in="SourceGraphic" in2="b" scale="70" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
+  <!-- Màn hình khoá -->
+  <div class="lock" id="lock" role="dialog" aria-label="Thiệp mời">
+    <p class="date" id="lockDate"></p>
+    <p class="clock" id="lockClock">9:41</p>
+    <button class="notif glass press" id="unlock" aria-label="Mở thiệp mời">
+      <span class="app">🎓</span>
+      <span style="flex:1;min-width:0"><b>Thiệp mời</b><small>bây giờ</small><p id="notifText"></p></span>
+    </button>
+    <p class="swipe">Chạm hoặc vuốt lên để mở</p>
+    <div class="home-bar"></div>
+  </div>
+
+  <!-- Dynamic Island / Live Activity -->
+  <button class="island" id="island" aria-label="Đếm ngược tới buổi lễ">
+    <span class="row1"><span class="dot">🎓</span><span class="mini" id="islandMini"></span></span>
+    <span class="full"><span class="dot">🎓</span><p>Lễ tốt nghiệp<small id="islandSub"></small></p><b id="islandBig"></b></span>
+  </button>
+
+  <main>
+    <section class="hero glass reveal" id="home">
+      <span class="cap">🎓</span>
+      <p class="to" id="guest"></p>
+      <h1>Lễ Tốt Nghiệp</h1>
+      <p class="name" id="name"></p>
+      <p class="deg" id="degree"></p>
+      <div class="actions">
+        <a class="act glass press primary" id="rsvpBtn"><span>✉️</span>Xác nhận</a>
+        <a class="act glass press" id="calBtn" target="_blank" rel="noopener"><span>📅</span>Thêm lịch</a>
+        <a class="act glass press" id="mapBtn" target="_blank" rel="noopener"><span>📍</span>Chỉ đường</a>
+      </div>
+    </section>
+
+    <div class="widgets">
+      <div class="w glass reveal">
+        <p class="k" id="wDow"></p>
+        <div><p class="v" id="wDay"></p><p class="s" id="wMonth"></p></div>
+      </div>
+      <div class="w glass reveal">
+        <p class="k" style="color:var(--green)">Bắt đầu</p>
+        <div><p class="v" id="wTime"></p><p class="s" id="wArrive"></p></div>
+      </div>
+      <div class="w wide glass reveal">
+        <p class="k" style="color:var(--blue)">Còn lại</p>
+        <div id="cdBox" class="cd" aria-live="off">
+          <div><b id="d">00</b><span>ngày</span></div><div><b id="h">00</b><span>giờ</span></div>
+          <div><b id="m">00</b><span>phút</span></div><div><b id="s">00</b><span>giây</span></div>
+        </div>
+      </div>
+      <a class="w wide glass reveal press venue-row" id="mapBtn2" target="_blank" rel="noopener">
+        <span class="pin">📍</span>
+        <span><b id="venueName"></b><p class="s" id="venueAddr"></p></span>
+      </a>
+    </div>
+
+    <h2 class="sec-title" id="plan">Ngày hôm ấy</h2>
+    <div class="seg glass reveal" id="seg" data-i="0" role="tablist">
+      <span class="thumb"></span>
+      <button role="tab" aria-selected="true" aria-controls="p0">Lịch trình</button>
+      <button role="tab" aria-selected="false" aria-controls="p1">Lưu ý khách</button>
+    </div>
+    <div class="list glass panel reveal" id="p0" role="tabpanel"></div>
+    <div class="list glass panel" id="p1" role="tabpanel" hidden></div>
+
+    <h2 class="sec-title" id="more">Thông tin thêm</h2>
+    <div class="list glass reveal">
+      <button class="item press" style="width:100%;text-align:left" data-sheet="sheetGown">
+        <span class="ic" style="background:#5e5ce6">👘</span><span><b>Lễ phục &amp; chụp ảnh vinh danh</b><p>Lịch nhận, trả lễ phục của ngành</p></span><time>›</time>
+      </button>
+      <button class="item press" style="width:100%;text-align:left" data-sheet="sheetFee">
+        <span class="ic" style="background:#ff9f0a">💳</span><span><b>Chi phí &amp; bồi thường</b><p>Phí dịch vụ, tiền thế chân</p></span><time>›</time>
+      </button>
+    </div>
+
+    <footer id="foot"></footer>
+  </main>
+
+  <nav class="tabbar glass" id="tabbar" aria-label="Điều hướng">
+    <a href="#home" class="on"><span>🏠</span>Thiệp</a>
+    <a href="#plan"><span>🗓️</span>Lịch</a>
+    <a href="#more"><span>ℹ️</span>Thêm</a>
+  </nav>
+
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet glass" id="sheetGown" role="dialog" aria-modal="true" aria-label="Lễ phục"><button class="grab" aria-label="Đóng"></button><h3>Lễ phục &amp; chụp ảnh</h3><div id="gownList"></div></div>
+  <div class="sheet glass" id="sheetFee" role="dialog" aria-modal="true" aria-label="Chi phí"><button class="grab" aria-label="Đóng"></button><h3>Chi phí</h3><table id="feeTable"></table></div>
+<script>
+/* ====== SỬA THÔNG TIN Ở ĐÂY (theo thông báo 2380/KH-ĐHM, ngành CNTT) ====== */
+const INVITE = {
+  name: 'Nguyễn Trung Quân',
+  degree: 'Cử nhân Công nghệ Thông tin',
+  school: 'Trường Đại học Mở TP.HCM',
+  start: '2026-11-14T08:30:00+07:00',   // Lễ: sáng 14/11, 08h30 – 11h30
+  hours: 3,
+  arrive: '07:30',                       // khách nên có mặt
+  venueName: 'Hội trường A (lầu 6)',
+  venueAddr: '97 Võ Văn Tần, P. Xuân Hòa, TP.HCM',
+  mapQuery: 'Trường Đại học Mở TP.HCM, 97 Võ Văn Tần',
+  message: 'Sau những năm tháng miệt mài, mình rất mong được cùng bạn lưu lại khoảnh khắc đáng nhớ này.',
+  rsvp: 'mailto:you@example.com?subject=' + encodeURIComponent('Xác nhận tham dự lễ tốt nghiệp'), // hoặc 'https://zalo.me/0900000000'
+};
+// Danh sách khách: đường dẫn → tên có dấu. VD: domain.com/NguyenVanA
+const GUESTS = {
+  NguyenVanA: 'Nguyễn Văn A',
+  TranThiB: 'Trần Thị B',
+};
+// [icon, màu, tiêu đề, mô tả, giờ bắt đầu "HH:MM"]
+const AGENDA = [
+  ['📍', '#0a84ff', 'Có mặt & điểm danh', 'Tân cử nhân điểm danh, tập dợt tại Hội trường A', '07:30'],
+  ['🎓', '#ff375f', 'Lễ tốt nghiệp bắt đầu', 'Đến trễ sẽ không được vào Hội trường A', '08:30'],
+  ['📜', '#5e5ce6', 'Trao bìa bằng tốt nghiệp', 'Ảnh vinh danh chiếu trên phông sân khấu', '09:00'],
+  ['📸', '#30d158', 'Kết thúc & chụp ảnh lưu niệm', 'Cùng chụp hình sau buổi lễ nhé!', '11:30'],
+];
+const RULES = [
+  ['💌', '#ff375f', 'Mỗi tân cử nhân được mời 01 người thân', 'Vào Hội trường A bằng thư mời của trường. Người thân khác xem truyền hình trực tiếp tại HT601.'],
+  ['⏰', '#ff9f0a', 'Không vào khi lễ đã bắt đầu', 'Vui lòng đến trước 08h30.'],
+  ['🧒', '#64d2ff', 'Trẻ em dưới 10 tuổi', 'Không được vào Hội trường A.'],
+  ['👔', '#5e5ce6', 'Trang phục lịch sự', 'Không dùng điện thoại, nói chuyện riêng hay di chuyển ra ngoài trong buổi lễ.'],
+  ['🎒', '#30d158', 'Tự bảo quản tài sản cá nhân', 'Ảnh buổi lễ sẽ được đăng tại ou.edu.vn/ky-yeu-sinh-vien'],
+];
+const GOWN = [
+  ['👘', '#5e5ce6', 'Nhận lễ phục', 'Ngày 10, 11/11/2026 · Phòng 003, 97 Võ Văn Tần · 8h00–12h00, 13h00–17h00'],
+  ['💵', '#ff9f0a', 'Thế chân 700.000đ/bộ', 'Đóng tiền mặt tại Phòng 009 trước khi nhận lễ phục'],
+  ['📸', '#30d158', 'Chụp ảnh vinh danh', 'Hội trường 601 (HT B), trong ngày nhận lễ phục'],
+  ['↩️', '#0a84ff', 'Trả lễ phục', 'Ngày 14, 15/11/2026 · Phòng 003, nhận lại thế chân tại Phòng 009 (cần hoàn tất khảo sát)'],
+  ['▶️', '#ff375f', 'Hướng dẫn mặc lễ phục', 'youtube.com/watch?v=SFYYfbD5Mc0'],
+];
+const FEES = [
+  ['Phí dịch vụ (bìa bằng, giặt ủi, chụp hình)', '600.000đ'], ['Thế chân lễ phục (hoàn trả)', '700.000đ'],
+  ['Mất/rách áo', '500.000đ'], ['Mất/rách/ướt nón', '100.000đ'], ['Mất/rách túi càn khôn', '100.000đ'],
+  ['Mất/rách khăn', '70.000đ'], ['Hư dây kéo', '60.000đ'], ['Hư nón (râu, chốt…)', '40.000đ'],
+];
+/* ======================================================================= */
+const $ = id => document.getElementById(id);
+const TZ = 'Asia/Ho_Chi_Minh';
+const start = new Date(INVITE.start);
+const end = new Date(start.getTime() + INVITE.hours * 36e5);
+const fmt = (d, o) => d.toLocaleString('vi-VN', { timeZone: TZ, ...o });
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const hhmm = fmt(start, { hour: '2-digit', minute: '2-digit' });
+const dm = fmt(start, { day: "2-digit" }) + "/" + fmt(start, { month: "2-digit" });
+
+// Text (textContent → an toàn với tên lấy từ URL)
+const text = {
+  name: INVITE.name, degree: INVITE.degree + ' · ' + INVITE.school,
+  wDow: fmt(start, { weekday: 'long' }), wDay: fmt(start, { day: 'numeric' }), wMonth: fmt(start, { month: 'long', year: 'numeric' }),
+  wTime: hhmm, wArrive: 'Có mặt lúc ' + INVITE.arrive, venueName: INVITE.venueName, venueAddr: INVITE.venueAddr,
+  islandSub: fmt(start, { weekday: "short" }) + ", " + dm + ' · ' + hhmm,
+  lockDate: fmt(new Date(), { weekday: 'long', day: 'numeric', month: 'long' }),
+  notifText: INVITE.name + ' mời bạn dự Lễ tốt nghiệp ' + dm + ' 🎉',
+  foot: INVITE.message,
+};
+for (const id in text) $(id).textContent = text[id];
+
+// Khách mời: /NguyenVanA → tra GUESTS; không có thì "LeVanC" → "Le Van C"; hoặc ?to=
+const raw = location.pathname.split('/').pop() || '';
+let slug; try { slug = decodeURIComponent(raw); } catch { slug = raw; }
+slug = slug.replace(/\.html?$/i, '').replace(/^(index|classic|apple)$/i, '');
+const key = Object.keys(GUESTS).find(k => k.toLowerCase() === slug.toLowerCase());
+const guest = (key ? GUESTS[key]
+  : new URLSearchParams(location.search).get('to')
+  || slug.replace(/[-_]+/g, ' ').replace(/(\p{Ll})(\p{Lu})/gu, '$1 $2').trim()).slice(0, 60);
+if (guest) { $('guest').textContent = 'Gửi ' + guest; $('notifText').textContent = 'Gửi ' + guest + ' — ' + text.notifText; }
+
+// Links
+const gcal = d => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
+const venue = INVITE.venueName + ', ' + INVITE.venueAddr;
+$('calBtn').href = 'https://calendar.google.com/calendar/render?' + new URLSearchParams({
+  action: 'TEMPLATE', text: 'Lễ tốt nghiệp của ' + INVITE.name, dates: gcal(start) + '/' + gcal(end), location: venue,
+  details: 'Có mặt lúc ' + INVITE.arrive + '. ' + INVITE.message });
+$('mapBtn').href = $('mapBtn2').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(INVITE.mapQuery);
+$('rsvpBtn').href = INVITE.rsvp;
+
+// Danh sách kiểu Settings (createElement → không chèn HTML)
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+function list(box, rows) {
+  for (const [ic, color, title, desc, time] of rows) {
+    const it = el('div', 'item'), i = el('span', 'ic', ic), body = el('span');
+    i.style.background = color;
+    body.append(el('b', '', title), el('p', '', desc));
+    it.append(i, body);
+    if (time) { it.append(el('time', '', time)); it.dataset.t = time; }
+    box.append(it);
+  }
+}
+list($('p0'), AGENDA); list($('p1'), RULES); list($('gownList'), GOWN);
+for (const [k, v] of FEES) { const tr = $('feeTable').insertRow(); tr.insertCell().textContent = k; tr.insertCell().textContent = v; }
+
+// Countdown + Dynamic Island + đánh dấu mục lịch trình đang diễn ra
+const pad = n => String(n).padStart(2, '0');
+function setNum(id, v) { const b = $(id); if (b.textContent === v) return; b.textContent = v; if (!reduce) { b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); } }
+function tick() {
+  const now = new Date(), ms = start - now;
+  const hm = fmt(now, { hour: '2-digit', minute: '2-digit', hour12: false });
+  const sameDay = fmt(now, { dateStyle: 'short' }) === fmt(start, { dateStyle: 'short' });
+  const items = [...$('p0').children];
+  items.forEach((it, i) => it.classList.toggle('now', sameDay && hm >= it.dataset.t && (!items[i + 1] || hm < items[i + 1].dataset.t)));
+  if (ms <= 0) {
+    const live = now < end;
+    $('cdBox').replaceChildren(el('b', '', live ? 'Đang diễn ra' : 'Đã kết thúc'));
+    $('cdBox').style.display = 'block';
+    $('islandMini').textContent = $('islandBig').textContent = live ? 'LIVE' : '✓';
+    return live || clearInterval(timer);
+  }
+  const t = Math.floor(ms / 1000), d = Math.floor(t / 86400);
+  const hh = pad(Math.floor(t / 3600) % 24), mm = pad(Math.floor(t / 60) % 60), ss = pad(t % 60);
+  setNum('d', pad(d)); setNum('h', hh); setNum('m', mm); setNum('s', ss);
+  $('islandMini').textContent = d + 'n ' + hh + ':' + mm;
+  $('islandBig').textContent = d > 0 ? d + ' ngày' : hh + ':' + mm + ':' + ss;
+}
+const timer = setInterval(tick, 1000); tick();
+// Đồng hồ màn hình khoá
+const clock = () => $('lockClock').textContent = fmt(new Date(), { hour: 'numeric', minute: '2-digit', hour12: false });
+clock(); setInterval(clock, 10000);
+
+// Mở khoá: chạm, vuốt lên, hoặc Enter/Space
+const lock = $('lock'), island = $('island');
+document.body.style.overflow = 'hidden';
+function unlock() {
+  if (lock.classList.contains('open')) return;
+  lock.classList.add('open'); document.body.style.overflow = '';
+  setTimeout(() => island.classList.add('big'), 700);
+  setTimeout(() => island.classList.remove('big'), 3800);
+}
+$('unlock').onclick = unlock;
+let y0 = null;
+lock.addEventListener('pointerdown', e => y0 = e.clientY);
+lock.addEventListener('pointerup', e => { if (y0 !== null && y0 - e.clientY > 60) unlock(); y0 = null; });
+addEventListener('keydown', e => { if (!lock.classList.contains('open') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); unlock(); } });
+island.onclick = () => island.classList.toggle('big');
+
+// Segmented control
+const seg = $('seg'), tabs = [...seg.querySelectorAll('button')];
+tabs.forEach((b, i) => b.onclick = () => {
+  seg.dataset.i = i;
+  tabs.forEach((x, j) => { x.setAttribute('aria-selected', i === j); $(x.getAttribute('aria-controls')).hidden = i !== j; });
+});
+
+// Sheets
+let openSheet = null;
+const closeSheet = () => { if (!openSheet) return; openSheet.classList.remove('on'); $('sheetBg').classList.remove('on'); openSheet = null; };
+document.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => {
+  openSheet = $(b.dataset.sheet); openSheet.classList.add('on'); $('sheetBg').classList.add('on'); openSheet.querySelector('.grab').focus();
+});
+$('sheetBg').onclick = closeSheet;
+document.querySelectorAll('.grab').forEach(g => g.onclick = closeSheet);
+addEventListener('keydown', e => e.key === 'Escape' && closeSheet());
+
+// Phản quang kính theo con trỏ/ngón tay
+addEventListener('pointermove', e => {
+  const g = e.target.closest?.('.glass'); if (!g) return;
+  const r = g.getBoundingClientRect();
+  g.style.setProperty('--mx', (e.clientX - r.left) / r.width * 100 + '%');
+  g.style.setProperty('--my', (e.clientY - r.top) / r.height * 100 + '%');
+}, { passive: true });
+
+// Hiện khi cuộn tới
+const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && (e.target.classList.add('in'), io.unobserve(e.target))), { threshold: .12 });
+document.querySelectorAll('.reveal').forEach(x => io.observe(x));
+
+// Tab bar: thu nhỏ khi cuộn xuống, highlight mục hiện tại
+const tabLinks = [...$('tabbar').children];
+let lastY = 0;
+addEventListener('scroll', () => {
+  $('tabbar').classList.toggle('min', scrollY > lastY && scrollY > 80); lastY = scrollY;
+  let cur = tabLinks[0];
+  for (const a of tabLinks) if ($(a.hash.slice(1)).getBoundingClientRect().top < innerHeight / 2) cur = a;
+  tabLinks.forEach(a => a.classList.toggle('on', a === cur));
+}, { passive: true });
+
+// Khúc xạ thật chỉ bật trên Chromium (Safari/Firefox chưa hỗ trợ backdrop-filter: url())
+if (!reduce && /Chrome\//.test(navigator.userAgent)) document.documentElement.classList.add('refract');
+</script>
+</body>
+</html>
