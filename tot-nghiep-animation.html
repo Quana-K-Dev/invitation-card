@@ -354,16 +354,19 @@ function dBean(c, f) {
   for (let k = 0; k < n; k++) P(c, 8, 32 + k * 3, w[k], 1, '#b7c7ba');
 }
 function dLaguna(c, f) {
-  P(c, 0, 0, 36, 64, '#1e1b4b');
-  for (let y = 4; y < 21; y++) for (let x = 10; x < 27; x++) { const r = Math.hypot(x - 18, y - 12); if (r <= 7) D1(c, x, y, r >= 4.5 && r <= 5.6 ? '#f59e0b' : '#fbbf24'); }
-  P(c, 16, 9, 4, 7, '#b45309');
-  const ph = f % 30, typed = Math.min(20, Math.floor(ph * 1.2)), dots = Math.max(0, Math.min(8, Math.floor((ph - 14) / 1.5)));
-  P(c, 5, 24, 26, 9, '#312e81'); P(c, 5, 24, 26, 1, '#4f46e5'); P(c, 7, 27, typed, 3, '#c7d2fe');
-  P(c, 5, 36, 26, 9, '#312e81'); P(c, 5, 36, 26, 1, '#4f46e5'); for (let i = 0; i < dots; i++) P(c, 8 + i * 3, 39, 2, 2, '#c7d2fe');
-  if (ph < 14 && f % 6 < 3) P(c, 8 + typed, 26, 1, 5, '#fff');
-  const done = ph >= 24; P(c, 5, 49, 26, 9, done ? '#34d399' : '#a78bfa');
-  if (done) { line(c, 15, 53, 17, 55, '#fff'); line(c, 17, 55, 22, 51, '#fff'); }
-  P(c, 5, 60, 12, 3, '#fff'); P(c, 19, 60, 12, 3, '#4f46e5');
+  // sàn thương mại trả bằng xu: số dư 120 → chọn món 40 xu → xu bay lên ví → còn 80, nút xanh ✓
+  const coin = (x, y) => { P(c, x, y, 4, 4, '#f59e0b'); P(c, x + 1, y + 1, 2, 2, '#fde68a'); };
+  const ph = f % 30, sel = ph >= 6, paid = ph >= 20;
+  P(c, 0, 0, 36, 64, '#1e1b4b'); P(c, 0, 0, 36, 8, '#312e81');
+  coin(3, 2); T(c, paid ? '80' : '120', 9, 2, '#fbbf24');
+  [['#f472b6', 3, 11, '30'], ['#60a5fa', 19, 11, '40'], ['#34d399', 3, 30, '25'], ['#f59e0b', 19, 30, '50']].forEach(([col, x, y, pr], i) => {
+    P(c, x, y, 14, 17, '#312e81'); P(c, x + 2, y + 2, 10, 7, col); P(c, x + 4, y + 4, 6, 3, '#1e1b4b');
+    P(c, x + 2, y + 11, 3, 3, '#f59e0b'); T(c, pr, x + 6, y + 10, '#c7d2fe');
+    if (i === 1 && sel) { P(c, x, y, 14, 1, '#fbbf24'); P(c, x, y + 16, 14, 1, '#fbbf24'); P(c, x, y, 1, 17, '#fbbf24'); P(c, x + 13, y, 1, 17, '#fbbf24'); }
+  });
+  P(c, 5, 50, 26, 9, paid ? '#34d399' : sel ? '#a78bfa' : '#4c1d95');
+  if (paid) { line(c, 15, 54, 17, 56, '#fff'); line(c, 17, 56, 22, 52, '#fff'); } else { coin(12, 52); T(c, '40', 18, 52, '#fff'); }
+  if (ph >= 14 && !paid) { const k = (ph - 14) / 6; coin(16 - 13 * k, 52 - 50 * k); }
 }
 const DRAW = [dScore, dDbay, dSketch, dFantek, dBean, dLaguna];
 
