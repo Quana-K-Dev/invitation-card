@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hoạt ảnh pixel – Nguyễn Trung Quân</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1d3a28; --panel: #2c5236; --ink: #f4f0e0; --dim: #a9c4ae; --line: #0b1a11;
+    --yellow: #ffd166; --blue: #4cc9f0; --pink: #ff6b8b; --orange: #ff9f43; --green: #7cfc00;
+    --px: 'VT323', 'Be Vietnam Pro', monospace; --sans: 'Be Vietnam Pro', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+  .wrap { position: fixed; inset: 0; }
+  .stage {
+    position: absolute; left: 50%; top: 50%; width: 960px; height: 540px; overflow: hidden; transform-origin: center;
+    background-color: var(--bg);
+    background-image: linear-gradient(rgba(255,255,255,.035) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,.035) 2px, transparent 2px);
+    background-size: 24px 24px;
+  }
+  .stage::after { /* scanline nhẹ */
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 40;
+    background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.07) 2px 3px);
+  }
+  .paused *, .paused *::before, .paused *::after { animation-play-state: paused !important; }
+
+  .scene { position: absolute; inset: 0; display: none; }
+  .scene.on { display: block; }
+  .abs { position: absolute; }
+
+  .panel {
+    background: var(--panel);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.28), inset 4px 4px 0 rgba(255,255,255,.12), 0 0 0 4px var(--line);
+  }
+  .pop { opacity: 0; animation: pop .5s steps(5) var(--d, 0s) forwards; }
+  @keyframes pop { 0% { opacity: 0; transform: translateY(14px) scale(.92); } 100% { opacity: 1; transform: none; } }
+  .clip { clip-path: inset(0 100% 0 0); animation: reveal .8s steps(var(--n, 20)) var(--d, 0s) forwards; }
+  @keyframes reveal { to { clip-path: inset(0 0 0 0); } }
+  .bob { animation: bob 1s steps(2) infinite; }
+  @keyframes bob { 50% { transform: translateY(-6px); } }
+  .blink { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  h2.title { position: absolute; left: 40px; top: 26px; font-size: 40px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; text-shadow: 4px 4px 0 var(--line); }
+  h2.title em { font-style: normal; color: var(--yellow); }
+  .sub { position: absolute; left: 40px; top: 78px; font-size: 18px; color: var(--dim); font-weight: 600; }
+  .chip { display: inline-block; white-space: nowrap; padding: 4px 10px; background: var(--line); color: var(--ink); font-family: var(--px); font-size: 20px; line-height: 1; }
+
+  /* ---- Ảnh đại diện (ảnh thật, thiếu file thì tự vẽ pixel) ---- */
+  .me { position: relative; }
+  .me { overflow: hidden; } /* canvas pixel tỉ lệ cố định: cắt phần thừa, không tràn khung */
+  .me > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+  /* ảnh vuông có sẵn góc bo; JPG không giữ trong suốt nên bo lại bằng CSS để bỏ viền trắng */
+  .me .photo { object-fit: cover; image-rendering: pixelated; border-radius: 11%;
+    box-shadow: 0 0 0 4px var(--line), 9px 9px 0 rgba(0,0,0,.32); }
+  .me canvas { z-index: 2; } /* nón tốt nghiệp vẽ đè lên ảnh thật */
+
+  /* ---- Cảnh 1 ---- */
+  .brand { position: absolute; left: 40px; top: 28px; font-family: var(--px); font-size: 26px; color: var(--dim); letter-spacing: .08em; }
+  .term { left: 40px; top: 90px; width: 520px; height: 350px; background: #0f1f16; padding: 0 22px 18px; }
+  .term .bar { margin: 0 -22px 16px; height: 38px; background: #1d3a28; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 16px; font-weight: 700; color: var(--dim); }
+  .term .bar i { width: 12px; height: 12px; background: var(--yellow); }
+  .term .bar span { margin-left: auto; font-weight: 600; }
+  .term p { font-size: 23px; font-weight: 600; line-height: 1.42; color: var(--ink); white-space: nowrap; margin-bottom: 9px; }
+  .term .big { font-size: 28px; font-weight: 800; color: var(--yellow); }
+  .term .dim { color: var(--dim); font-weight: 600; }
+  .term .cur { display: inline-block; width: 11px; height: 20px; background: var(--yellow); vertical-align: -2px; }
+  .bubble { position: absolute; left: 600px; top: 48px; width: 326px; padding: 13px 16px; background: var(--ink); color: #14141f; font-weight: 700; font-size: 19px; text-align: center; box-shadow: 0 0 0 4px var(--line); }
+  .bubble::after { content: ''; position: absolute; left: 140px; bottom: -14px; border: 10px solid transparent; border-top: 14px solid var(--ink); border-bottom: 0; }
+  .tag { position: absolute; left: 585px; top: 452px; width: 356px; text-align: center; }
+  .tag .chip { white-space: normal; font-family: var(--sans); font-size: 17px; font-weight: 700; padding: 9px 14px; line-height: 1.25; }
+
+  /* ---- Cảnh 2 ---- */
+  .road { position: absolute; left: 20px; right: 20px; top: 400px; height: 8px; background: repeating-linear-gradient(90deg, var(--ink) 0 24px, transparent 24px 40px); opacity: .55; }
+  .ms { position: absolute; top: 120px; width: 172px; padding: 14px 12px 16px; text-align: center; opacity: 0; transition: none; }
+  .ms.show { animation: pop .5s steps(5) forwards; }
+  .ms .yr { font-family: var(--px); font-size: 58px; line-height: .9; color: var(--yellow); }
+  .ms h3 { font-size: 17px; font-weight: 800; margin-top: 6px; line-height: 1.25; }
+  .ms p { font-size: 13.5px; color: var(--dim); line-height: 1.4; margin-top: 6px; font-weight: 600; }
+  .ms::after { content: ''; position: absolute; left: 50%; margin-left: -4px; top: 100%; width: 8px; height: calc(var(--drop, 130px)); background: repeating-linear-gradient(var(--ink) 0 6px, transparent 6px 12px); opacity: .5; }
+  .dot { position: absolute; top: 396px; width: 16px; height: 16px; margin-left: -8px; background: var(--yellow); box-shadow: 0 0 0 4px var(--line); }
+  .walker { position: absolute; left: 0; top: 314px; }
+
+  /* ---- Cảnh 3 ---- */
+  .phones { position: absolute; left: 30px; top: 118px; width: 900px; display: flex; }
+  .col { width: 150px; padding: 0 6px; text-align: center; }
+  .phone { margin: 0 auto; width: 122px; padding: 7px 7px 9px; background: #0d0d14; box-shadow: 0 0 0 3px #3b3b4a, 6px 6px 0 3px rgba(0,0,0,.35); }
+  .phone canvas { width: 108px; height: 192px; }
+  .col b { display: block; margin-top: 18px; font-size: 16px; font-weight: 800; }
+  .col .chip { margin: 6px 0; font-family: var(--sans); font-size: 12.5px; font-weight: 700; padding: 5px 9px; color: var(--yellow); }
+  .col p { font-size: 12.5px; line-height: 1.4; color: var(--dim); font-weight: 600; }
+  .foot { position: absolute; left: 0; right: 0; top: 478px; text-align: center; font-size: 15px; color: var(--dim); font-weight: 600; }
+
+  /* ---- Cảnh 4 ---- */
+  .layer { position: absolute; left: 40px; width: 480px; height: 90px; padding: 14px 22px; display: flex; flex-direction: column; justify-content: center; }
+  .layer b { font-size: 23px; font-weight: 800; line-height: 1; letter-spacing: .01em; }
+  .layer span { font-size: 15px; color: var(--dim); font-weight: 600; margin-top: 4px; }
+  .layer.l1 { top: 110px; background: #355f78; } .layer.l2 { top: 216px; background: #5b4a80; } .layer.l3 { top: 322px; background: #7a5a2c; }
+  .layer.l1 b { color: var(--blue); } .layer.l2 b { color: #d6b8ff; } .layer.l3 b { color: var(--yellow); }
+  .note { position: absolute; left: 40px; top: 436px; width: 480px; font-size: 15px; color: var(--dim); line-height: 1.5; font-weight: 600; }
+  .chips { position: absolute; left: 570px; top: 110px; width: 350px; display: flex; flex-wrap: wrap; gap: 12px; }
+  .chips .chip { font-family: var(--sans); font-size: 14px; font-weight: 700; padding: 8px 12px; box-shadow: 0 0 0 3px #3a5a44; }
+
+  /* ---- Cảnh 5 ---- */
+  .tiles { position: absolute; left: 49px; top: 140px; display: flex; gap: 14px; }
+  .tile { width: 205px; height: 176px; padding: 18px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+  .tile .num { font-size: 58px; font-weight: 800; white-space: nowrap; line-height: .95; color: var(--yellow); font-variant-numeric: tabular-nums; }
+  .tile span { font-size: 14.5px; font-weight: 700; color: var(--ink); margin-top: 10px; line-height: 1.3; }
+  .tags { position: absolute; left: 49px; right: 49px; top: 352px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .tags .chip { font-family: var(--sans); font-size: 14px; font-weight: 700; padding: 8px 12px; color: var(--blue); }
+  .stack { position: absolute; left: 49px; right: 49px; top: 440px; font-size: 15px; color: var(--dim); line-height: 1.5; font-weight: 600; }
+
+  /* ---- Cảnh 6 ---- */
+  .runs { position: absolute; left: 40px; top: 112px; width: 620px; }
+  .run { display: flex; align-items: center; gap: 14px; padding: 8px 14px; margin-bottom: 12px; font-size: 17px; font-weight: 700; line-height: 1.3; }
+  .run .chip { flex: 0 0 72px; text-align: center; font-family: var(--sans); font-size: 13px; font-weight: 800; padding: 7px 0; }
+  .run .chip.go { color: var(--yellow); } .run .chip.ok { color: var(--green); } .run .chip.nx { color: var(--pink); }
+  .run small { display: block; font-size: 13px; color: var(--dim); font-weight: 600; margin-top: 2px; }
+  .code-bubble { position: absolute; left: 690px; top: 128px; width: 230px; padding: 11px 14px; background: #0f1f16; font-size: 18px; font-weight: 700; line-height: 1.3; color: var(--green); box-shadow: 0 0 0 4px var(--line); }
+
+  /* ---- Cảnh 7 ---- */
+  /* background-clip:text không ăn text-shadow; dùng màu đặc + viền cho chắc chữ luôn hiện */
+  .fin h1 { position: absolute; left: 382px; top: 54px; font-size: 76px; font-weight: 800; letter-spacing: -.035em; line-height: 1.1;
+    color: var(--yellow); text-shadow: 5px 5px 0 var(--line); }
+  @keyframes flow { to { background-position: -200% 0; } }
+  .fin .deg { position: absolute; left: 384px; top: 150px; width: 534px; font-size: 16.5px; font-weight: 700; color: var(--dim); line-height: 1.35; }
+  .fin .card { position: absolute; left: 382px; top: 204px; width: 536px; padding: 20px 24px; }
+  .fin .card .d { font-size: 30px; font-weight: 800; line-height: 1.1; color: var(--yellow); }
+  .fin .card .t { font-size: 21px; font-weight: 700; color: var(--ink); margin-top: 7px; }
+  .fin .card .p { font-size: 15.5px; color: var(--dim); margin-top: 9px; line-height: 1.45; font-weight: 600; }
+  .fin .see { position: absolute; left: 382px; top: 418px; width: 536px; font-size: 25px; font-weight: 800; }
+  /* confetti bay SAU chữ, không che nội dung */
+  #conf { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 0; pointer-events: none; opacity: .75; }
+  .fin h1, .fin .deg, .fin .card, .fin .see, .fin .me { z-index: 2; }
+
+  /* ---- HUD ---- */
+  .hud { position: absolute; left: 20px; right: 20px; bottom: 12px; height: 30px; z-index: 50; display: flex; align-items: center; gap: 10px; opacity: .92; }
+  .hud button { cursor: pointer; border: 0; background: var(--line); width: 30px; height: 30px; display: grid; place-items: center; box-shadow: inset 2px 2px 0 rgba(255,255,255,.15); }
+  .hud button:hover { background: #17301f; }
+  .ic-play { width: 0; height: 0; border: 7px solid transparent; border-left: 11px solid var(--ink); border-right: 0; }
+  .ic-pause { width: 4px; height: 14px; background: var(--ink); box-shadow: 8px 0 0 var(--ink); margin-right: 8px; }
+  .ic-replay { width: 14px; height: 14px; border: 3px solid var(--ink); border-top-color: transparent; border-radius: 50%; }
+  .segs { flex: 1; display: flex; gap: 4px; }
+  .seg { flex: var(--w); height: 14px; padding: 0; background: rgba(0,0,0,.45) !important; position: relative; overflow: hidden; width: auto !important; display: block !important; }
+  .seg i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--yellow); }
+  .seg.done i { width: 100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pop, .clip { animation-duration: .01s; }
+    .bob, .blink, .fin h1 { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+<div class="stage" id="stage" role="region" aria-label="Hoạt ảnh pixel giới thiệu hành trình của Nguyễn Trung Quân, lập trình viên Flutter">
+
+  <!-- 1. Boot -->
+  <section class="scene" id="s0">
+    <div class="brand">NGUYỄN TRUNG QUÂN</div>
+    <div class="term panel abs">
+      <div class="bar"><i></i><span>Thiệp mời · 14/11/2026</span></div>
+      <p class="clip" style="--d:.3s;--n:22">Xin chào,</p>
+      <p class="big clip" style="--d:1.1s;--n:24">Mình là Quân.</p>
+      <p class="dim clip" style="--d:2s;--n:28">Mình làm ứng dụng cho điện thoại.</p>
+      <p class="dim clip" style="--d:2.9s;--n:30">Bạn bấm vào app nào, mình làm cái đó.</p>
+      <p class="clip" style="--d:3.9s;--n:26">Và tháng này mình tốt nghiệp<span class="cur blink"></span></p>
+    </div>
+    <div class="me abs bob" style="left:618px;top:128px;width:290px;height:290px"><canvas class="bust" data-s="4"></canvas></div>
+    <div class="bubble pop" style="--d:4.2s">Bốn năm học, kể trong <b>54 giây</b></div>
+    <div class="tag pop" style="--d:4.8s"><span class="chip">Lập trình viên ứng dụng di động</span></div>
+  </section>
+
+  <!-- 2. Hành trình -->
+  <section class="scene" id="s1">
+    <h2 class="title">Hành trình <em>bốn năm</em></h2>
+    <p class="sub">Từ 2022 đến 2026 · hơn 1.461 ngày học và thức khuya</p>
+    <div class="road"></div>
+    <div id="msList"></div>
+    <div class="walker" id="walker"><canvas id="cWalk"></canvas></div>
+  </section>
+
+  <!-- 3. Đã làm -->
+  <section class="scene" id="s2">
+    <h2 class="title">6 ứng dụng mình <em>đã làm</em></h2>
+    <p class="sub">Những app thật, có người dùng thật · đi làm từ 01/2025</p>
+    <div class="phones" id="phones"></div>
+    <p class="foot">Mỗi màn hình bạn thấy ở đây là một app mình viết từ đầu</p>
+  </section>
+
+  <!-- 4. Cách làm -->
+  <section class="scene" id="s3">
+    <h2 class="title">Một app gồm <em>ba tầng</em></h2>
+    <p class="sub">Giống xây nhà: móng, khung, rồi mới sơn</p>
+    <div class="layer l1 panel pop" style="--d:.3s"><b>PHẦN BẠN THẤY</b><span>Màn hình, nút bấm, hình ảnh — thứ ngón tay bạn chạm vào</span></div>
+    <div class="layer l2 panel pop" style="--d:.9s"><b>PHẦN SUY NGHĨ</b><span>Quy tắc: đơn này hợp lệ không, tính bao nhiêu tiền</span></div>
+    <div class="layer l3 panel pop" style="--d:1.5s"><b>PHẦN GHI NHỚ</b><span>Nói chuyện với máy chủ, lưu dữ liệu, gửi thông báo</span></div>
+    <p class="note pop" style="--d:2.2s">Tách ba tầng để sửa một chỗ không làm hỏng chỗ khác. Thêm tính năng mới cũng nhanh hơn.</p>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <!-- 5. Đồ án -->
+  <section class="scene" id="s4">
+    <h2 class="title">Bài tốt nghiệp: <em>Struct App</em></h2>
+    <p class="sub">App quản lý công việc có AI trợ lý · mình làm một mình, từ A đến Z</p>
+    <div class="tiles" id="tiles"></div>
+    <div class="tags" id="tags"></div>
+    <p class="stack pop" style="--d:3s">Vừa làm phần app trên điện thoại, vừa làm phần máy chủ phía sau. Thường hai việc này là hai người khác nhau.</p>
+  </section>
+
+  <!-- 6. Đang làm -->
+  <section class="scene" id="s5">
+    <h2 class="title">Còn bây giờ thì <em>sao?</em></h2>
+    <p class="sub">Tháng 11 năm 2026 · đang đi làm chính thức</p>
+    <div class="runs" id="runs"></div>
+    <div class="me abs bob" style="left:700px;top:216px;width:216px;height:216px"><canvas class="bust" data-s="3"></canvas></div>
+    <div class="code-bubble pop" style="--d:.8s">Vẫn đang làm tiếp<span class="blink">_</span></div>
+  </section>
+
+  <!-- 7. Kết -->
+  <section class="scene fin" id="s6">
+    <div class="me abs bob" style="left:56px;top:152px;width:272px;height:272px"><canvas class="bust" data-s="5" data-cap="1"></canvas></div>
+    <h1 class="pop" style="--d:.2s">Tốt nghiệp.</h1>
+    <p class="deg pop" style="--d:.6s">Cử nhân Công nghệ Thông tin — Trường Đại học Mở TP.HCM</p>
+    <div class="card panel pop" style="--d:1s">
+      <div class="d">Thứ Bảy, 14/11/2026</div>
+      <div class="t">10:30 sáng · bạn đến từ 10:00 nhé</div>
+      <div class="p">Hội trường A (lầu 6), 97 Võ Văn Tần, P. Xuân Hòa, TP.HCM</div>
+    </div>
+    <div class="see pop" style="--d:1.8s">Rất mong có bạn ở đó.</div>
+    <canvas id="conf" width="240" height="135"></canvas>
+  </section>
+
+  <div class="hud" id="hud">
+    <button type="button" id="bPlay" aria-label="Tạm dừng" title="Tạm dừng / phát"><span class="ic-pause" id="icPlay"></span></button>
+    <button type="button" id="bReplay" aria-label="Xem lại từ đầu" title="Xem lại từ đầu"><span class="ic-replay"></span></button>
+    <div class="segs" id="segs"></div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ===== Dữ liệu ===== */
+// Ảnh đại diện thật. Đặt file avatar.jpg cạnh file này là tự dùng; không có thì rơi về hình pixel.
+const AVATAR = 'avatar.jpg';
+// [tâm ngang, đỉnh nón] trên lưới 72px của ảnh thật. Đo lại bằng: node measure.mjs
+const AV_CAP = [36, 13];
+const SC = [6, 8, 13, 6, 7, 6, 8];            // thời lượng từng cảnh (giây), tổng 54s
+const ST = []; let acc = 0; SC.forEach(d => { ST.push(acc); acc += d; }); const TOTAL = acc;
+
+const MILESTONES = [
+  ['2022', 'Vào đại học', 'Chưa biết gì. Tưởng học đại học là nhàn.'],
+  ['2023', 'App đầu tiên chạy được', 'Thức đêm tìm lỗi. Chạy được mà vẫn không hiểu vì sao.'],
+  ['2024', 'Đi dạy, đi thực tập', 'Dạy lập trình cho các em ở Teky. Lần đầu làm việc theo nhóm.'],
+  ['2025', 'Đi làm thật', 'Vào công ty, làm app cho khách. Vừa làm vừa viết bài tốt nghiệp.'],
+  ['2026', 'Tốt nghiệp', 'Và hôm nay, mình muốn có bạn ở đây.'],
+];
+const MS_X = [105, 290, 475, 660, 845];
+
+const APPS = [
+  ['Scorekeeper', 'Bóng chày', 'Ghi điểm trận đấu, ai cũng xem được cùng lúc. Có chỉ đường tới sân.'],
+  ['Discovery Dbay', 'Du lịch', 'Đi chơi ngoài đảo: giữ phiếu giảm giá, quét mã vào cổng.'],
+  ['Sketcher', 'Đi bộ', 'Đi bộ nhiều thì được thưởng. Tự đếm bước chân của bạn.'],
+  ['Fantek', 'Bóng đá', 'Cho người hâm mộ theo dõi đội bóng mình thích.'],
+  ['BEAN-BSL', 'Doanh nghiệp', 'App cũ viết lại từ đầu để chạy được cả iPhone và Android.'],
+  ['Laguna', 'Khu dân cư', 'Đăng nhập bằng email hoặc Google, một lần là xong.'],
+];
+const CHIPS = ['Chạy cả iPhone', 'và Android', 'Dùng chung một bộ mã', 'Đổi được tiếng Anh', 'Đăng nhập Face ID', 'Thông báo đẩy', 'Bản đồ chỉ đường', 'Thanh toán', 'Chạy được khi mất mạng'];
+const TILES = [[1013, 'tập tin mình viết', ''], [150, 'việc máy chủ làm được', '+'], [30, 'tính năng lớn', '+'], [1, 'người làm (là mình)', '']];
+const TAGS = ['AI trả lời như người thật', 'Nhiều người sửa cùng lúc', 'Trả tiền qua VNPay, MoMo', 'Chia việc theo nhóm', 'Chợ mẫu công việc'];
+const RUNS = [
+  ['NAY', 'go', 'Làm app di động tại Global Safe', 'Chính thức sau 2 tháng thử việc · phòng Dự án'],
+  ['NAY', 'go', 'Dự án Swapy — thu cũ đổi mới', 'Bạn mang điện thoại cũ, app định giá, hẹn ngày đổi máy mới'],
+  ['XONG', 'ok', 'Gặp đối tác FPT', 'Ngồi bàn với bên FPT để thống nhất cách hai hệ thống nói chuyện'],
+  ['XONG', 'ok', 'Gặp đối tác Viettel', 'Trao đổi trực tiếp với Viettel về phần kết nối'],
+  ['TỚI', 'nx', 'Lễ tốt nghiệp 14/11/2026', 'Và còn nhiều app nữa đang chờ được làm'],
+];
+
+/* ===== Tiện ích vẽ pixel ===== */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const P = (c, x, y, w, h, col) => { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), w, h); };
+const D1 = (c, x, y, col) => P(c, x, y, 1, 1, col);
+function setup(cv, w, h, s) { cv.width = w; cv.height = h; cv.style.width = w * s + 'px'; cv.style.height = h * s + 'px'; const c = cv.getContext('2d'); c.imageSmoothingEnabled = false; return c; }
+const F = { 0:'111101101101111', 1:'010110010010111', 2:'111001111100111', 3:'111001111001111', 4:'101101111001001', 5:'111100111001111', 6:'111100111101111', 7:'111001001001001', 8:'111101111101111', 9:'111101111001111', '-':'000000111000000', '+':'000010111010000' };
+function T(c, s, x, y, col) { for (const ch of String(s)) { const g = F[ch]; if (g) for (let i = 0; i < 15; i++) if (g[i] === '1') D1(c, x + i % 3, y + (i / 3 | 0), col); x += 4; } }
+function line(c, x0, y0, x1, y1, col) { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)); for (let i = 0; i <= n; i++) D1(c, Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), col); }
+
+/* ===== Avatar pixel (dựng theo ảnh: tóc đen rẽ lệch, kính tròn, áo sọc) ===== */
+const SPR = {"w":72,"h":72,"pal":["#f8f9ed","#bfb0a1","#e1905e","#877664","#66604d","#3f6646","#3e6646","#345637","#544039","#304c32","#2e4430","#2b432c","#212425","#15131f"],"rows":["........................................................................","...................................caaaaac..............................",".................................ccca8888acc............................","............................dddcccccccaa844ad...........................","..........................ca8acddcccacaa8848ac..........................",".........................ca88accddcaaa8a8888acd.........................","........................ca8aaacddccddca8a888acdd........................",".......................cdaaa8aacccddddca8a8aaacdc.......................",".......................dcca8cdddccdddddc8aa8accdd.......................","......................ddccacddddccccccdcacccacdcdc......................","......................ddcccdd8422222238cacdccadccd......................","......................dddcdc822222222228ccdddcddddc.....................",".....................dddddd8222222222228ccddddddddc.....................",".....................dddddc3222222222224cdddddddddd.....................",".....................ddddd82222222222224cdddddddddd.....................",".....................ddddd42222222222228c8ddccddddd.....................",".....................ddddc3222222222222d888dccddddd.....................",".....................dddd82222222222223c338cc4cdddd.....................",".....................cddd83accc8222222434ccdd84cddd.....................","......................ddd8c8488dd822228ddc844d88ddd.....................","......................ddc8888888cc3223c888888888dd......................","......................ddc8238c8c488334848a88828cdd......................",".......................dcc3a3d8444d84c843d848888dc......................","......................8c882428822282243228824344d8......................","......................28882222222282233222222244d28.....................","......................28824222222822228222222243c38.....................","......................34824222222422223322222323828.....................","......................c332244444322222224444422344......................",".......................33322222222322222222222232c......................",".......................33422222223c44882222222342c......................",".......................c2322222222344322222222328.......................","........................482222222222222222222283b.......................",".........................c322222222222222222228.........................","..........................82222322222222222223c.........................","..........................c2222233333333322228..........................","...........................822222222222222223c..........................","...........................c32222233332222228...........................","............................c222222222222228............................","............................d83222222222228d............................","............................d88222222222288c............................","............................c488322222224848............................","............................c248c42222388438............................","............................d22448ccccc44328............................","..........................c4d222484444443228a9..........................","........................d3184222234444322223831c........................","......................81413832222223332222224804188.....................","...................dd833d1382222222222222222880a833dd...................","................ddd44444a1082222222222222222810844448dd.................","..............c311100000110342222222222222224003000001114c..............","............dd11111111111400142222222222222400331111111113dd............",".........ddddddddddddddddc30034222222222234001adddddddddddddddd.........","........ddc333333333333334d100344222222483000c833333333333333ddd........",".......dd000000000000000000181000344444000043000000000000000001dd.......","......ddc034444444444444100013300000000001310003444444444444411dd.......","......34dddddddddddddddddddddddda1111114dddddddddddddddddddddddd48......",".....b104d811111111114cacccdddddddddddddddddcacccc31111111111cdc11......",".....d40081000000000000000033333333333333333100000000000000003c101d.....",".....dd4011111111111000000000000000000000000000000001111111113101cd.....","....838d40addddddddd43333333333333333333333333333338ddddddddd301dc3.....","....4004d4a4448dddddddddddddddddddddddddddddddddddddddddd444441dc10a....","....a1008da00001111111111acccccccccccccccccccc411111111110000ddc101c....","...ddd4008a00000000000000000000000000000000000000000000000000dc101dd....","...bcdd410488811111111111110000000000000000001111111111111888a101cdc....","...1138dd11dddddddddddddddd333333333333333334dd38cddddddddddc008dd303...","...30008dc3c8888844addddddddddddddddddddddddddd138cd84844844c3cdc1004...","..dd10003dd300000000111111118dddddddddddddd41111111100000000add41003dd..","..dddc100144111100000000000000000000000000000000000000001111c83001dddd..","..11cdd3001ddddc8888888888810000000000000000188888888888ddddd000add813..","..00138dd31dddddddddddddddddddddddddddddddddddddddddddddddddc13dd43001..",".da30001cdcd11111111444444444adddddddddddd844444444411111113dcda10014cd.",".ddda30014cd000000000000000001111111111111000000000000000001dc30004cddd.","103cddd3000addddddddd41111111111111111111111111111addddddddd40014ddd8301"],"cx":35.5};
+// cap: vẽ nón tốt nghiệp. capOnly: đã có ảnh thật phía dưới nên bỏ phần người.
+// capCX/capTY: tâm ngang và đỉnh nón, tính theo lưới 72px của canvas.
+function drawBust(c, cap, capOnly, capCX, capTY) {
+  const W = SPR.w, oy = 10, K = '#14141f', H = '#4b4b55', Y = '#ffd166';
+  const top = SPR.rows[2]; let a = W, b = 0;
+  for (let x = 0; x < W; x++) if (top[x] !== '.') { if (x < a) a = x; b = x; }
+  // cx của SPR là tâm thân; nón căn theo tâm ĐỈNH ĐẦU, lệch phải 2–3px so với thân
+  const cx = capCX ?? (b >= a ? Math.round((a + b) / 2) : Math.round(SPR.cx));
+  const ty = capTY ?? 9; // sát đỉnh tóc (tóc bắt đầu hàng 1 + oy 10)
+  c.clearRect(0, 0, W, SPR.h + oy);
+  if (!capOnly) SPR.rows.forEach((row, y) => { for (let x = 0; x < W; x++) { const ch = row[x]; if (ch !== '.') D1(c, x, y + oy, SPR.pal[parseInt(ch, 16)]); } });
+  if (cap) {
+    [[18, 0], [34, 1], [50, 2], [34, 3], [18, 4]].forEach(([w, y]) => P(c, cx - (w >> 1), ty + y, w, 1, K));
+    P(c, cx - 12, ty + 5, 24, 5, K); P(c, cx - 18, ty + 1, 8, 1, H); D1(c, cx, ty + 2, Y);
+    P(c, cx + 25, ty + 2, 1, 12, Y); P(c, cx + 24, ty + 14, 3, 4, Y);
+  }
+}
+function drawWalker(c, fr, cap) {
+  const K = '#14141f', S = '#e39a6b', W = '#fbf8ee', Pn = '#3a4a7e', Y = '#ffd166', oy = cap ? 3 : 0;
+  c.clearRect(0, 0, 16, 30);
+  const r = (x, y, w, h, col) => P(c, x, y + oy, w, h, col);
+  r(4, 0, 8, 3, K); r(3, 2, 1, 3, K); r(12, 2, 1, 3, K); r(4, 3, 8, 5, S);
+  r(5, 5, 2, 1, K); r(9, 5, 2, 1, K); r(7, 5, 2, 1, K); r(7, 7, 2, 1, '#b36a5e');
+  for (let y = 0; y < 8; y++) r(4, 8 + y, 8, 1, (y >> 1) % 2 ? W : K);
+  r(2, 9 + fr, 2, 4, K); r(2, 13 + fr, 2, 1, S); r(12, 10 - fr, 2, 4, K); r(12, 14 - fr, 2, 1, S);
+  const a = fr ? 0 : 2, b = fr ? 2 : 0;
+  r(4, 16, 3, 7 - a, Pn); r(3, 23 - a, 4, 1, W); r(8, 16, 3, 7 - b, Pn); r(8, 23 - b, 4, 1, W);
+  if (cap) { P(c, 3, 0, 10, 1, K); P(c, 1, 1, 14, 1, K); P(c, 3, 2, 10, 1, K); P(c, 15, 2, 1, 3, Y); }
+}
+
+/* ===== Màn hình 6 app (lưới 36×64) ===== */
+function dScore(c, f) {
+  P(c, 0, 0, 36, 64, '#2e8b4f'); for (let y = 11; y < 64; y += 8) P(c, 0, y, 36, 4, '#319656');
+  P(c, 0, 0, 36, 11, '#10231a');
+  const s = (f * .12) % 4, i = s | 0, k = s - i, pts = [[18, 54], [31, 40], [18, 26], [5, 40]], a = pts[i], b = pts[(i + 1) % 4];
+  T(c, 3 + Math.floor(f * .12 / 4), 11, 3, '#fff'); T(c, '-', 15, 3, '#fff'); T(c, 2, 19, 3, '#fff');
+  P(c, 29, 3, 4, 4, f % 8 < 4 ? '#ff4d4d' : '#7a1f1f');
+  pts.forEach((p, j) => line(c, p[0], p[1], pts[(j + 1) % 4][0], pts[(j + 1) % 4][1], '#8be09b'));
+  pts.forEach(p => P(c, p[0] - 1, p[1] - 1, 3, 3, '#fff'));
+  P(c, a[0] + (b[0] - a[0]) * k - 1, a[1] + (b[1] - a[1]) * k - 2, 3, 4, '#ffd166');
+  P(c, 0, 58, 36, 6, '#10231a'); P(c, 4, 60, 8, 2, '#8be09b'); P(c, 14, 60, 6, 2, '#4a6b57'); P(c, 22, 60, 10, 2, '#4a6b57');
+}
+function dDbay(c, f) {
+  P(c, 0, 0, 36, 64, '#eaf6ff'); P(c, 0, 0, 36, 10, '#0a84ff'); P(c, 4, 3, 8, 2, '#fff'); P(c, 4, 6, 5, 2, '#bfe0ff');
+  const cols = ['#ff6b8b', '#ff9f43', '#9aa5b1'];
+  for (let i = 0; i < 3; i++) {
+    const y = 14 + i * 13; P(c, 3, y, 30, 11, '#fff'); P(c, 3, y, 30, 1, '#d5e3f0');
+    if (f < 12) { P(c, 3, y, 30, 11, '#dfe7ef'); P(c, 3 + Math.max(0, Math.min(26, f * 3 - 4)), y, 4, 11, '#f4f8fc'); }
+    else { P(c, 3, y, 8, 11, cols[i]); P(c, 14, y + 2, 14, 2, '#2b3a4a'); P(c, 14, y + 6, 9, 2, '#aab6c2'); }
+  }
+  const q = Math.min(1, ((f * .04) % 1.25)), kx = 3 + Math.floor(q * 22), col = q < .34 ? '#0a84ff' : q < .67 ? '#ff9f43' : '#34c759';
+  P(c, 3, 54, 30, 8, '#cbd5e1'); P(c, 3, 54, kx - 3 + 4, 8, col); P(c, kx, 54, 8, 8, '#fff'); P(c, kx + 2, 57, 4, 2, col);
+}
+function dSketch(c, f) {
+  P(c, 0, 0, 36, 64, '#111827'); const p = (f * .015) % 1;
+  for (let y = 6; y < 40; y++) for (let x = 3; x < 34; x++) { const dx = x - 18, dy = y - 22, r = Math.hypot(dx, dy); if (r >= 10.5 && r <= 13.2) D1(c, x, y, ((Math.atan2(dx, -dy) + 2 * Math.PI) % (2 * Math.PI)) / (2 * Math.PI) <= p ? '#7cfc00' : '#273244'); }
+  T(c, String(Math.floor(p * 9999)).padStart(4, '0'), 10, 19, '#fff'); P(c, 10, 28, 16, 1, '#5b6b82');
+  const a = Math.floor(f / 4) % 2;
+  P(c, 9, 42, 6, 9, a ? '#7cfc00' : '#2a3b2a'); P(c, 9, 52, 6, 2, a ? '#7cfc00' : '#2a3b2a');
+  P(c, 21, 46, 6, 9, a ? '#2a3b2a' : '#7cfc00'); P(c, 21, 56, 6, 2, a ? '#2a3b2a' : '#7cfc00');
+}
+function dFantek(c, f) {
+  P(c, 0, 0, 36, 64, '#0b3d2e'); for (let y = 0; y < 64; y += 16) P(c, 0, y + 8, 36, 8, '#0e4a37');
+  P(c, 8, 4, 20, 2, '#fff'); P(c, 8, 4, 2, 10, '#fff'); P(c, 26, 4, 2, 10, '#fff');
+  for (let y = 6; y < 14; y += 2) for (let x = 10; x < 26; x += 2) D1(c, x, y, '#3d7a63');
+  const t = f * .2, bx = 18 + Math.sin(t * .5) * 9, by = 44 - Math.abs(Math.sin(t)) * 24;
+  P(c, bx - 3, 52, 7, 2, '#082a20');
+  for (let y = -4; y <= 4; y++) for (let x = -4; x <= 4; x++) if (Math.hypot(x, y) <= 3.6) D1(c, Math.round(bx) + x, Math.round(by) + y, (Math.abs(x) <= 1 && Math.abs(y) <= 1) ? '#14141f' : '#fff');
+  P(c, 0, 58, 36, 6, '#06251c'); P(c, 15, 57, 6, 7, '#ffd166'); P(c, 17, 59, 2, 3, '#0b3d2e');
+}
+function dBean(c, f) {
+  P(c, 0, 0, 36, 64, '#e8f5e9'); P(c, 0, 0, 36, 12, '#14532d');
+  P(c, 5, 5, 6, 2, '#86efac'); P(c, 7, 3, 3, 2, '#86efac'); P(c, 6, 7, 2, 2, '#86efac'); P(c, 14, 4, 14, 2, '#bbf7d0');
+  P(c, 3, 14, 30, 5, '#fff'); P(c, 5, 16, 2, 2, '#14532d'); P(c, 9, 16, 14, 1, '#a7c4ad');
+  P(c, 5, 22, 26, 38, '#fff'); P(c, 5, 22, 26, 1, '#c8d8cb'); P(c, 7, 24, 9, 5, '#dc2626'); P(c, 9, 26, 5, 1, '#fff');
+  const n = Math.min(8, Math.floor(f / 3) % 11), w = [18, 14, 18, 10, 16, 18, 12, 16];
+  for (let k = 0; k < n; k++) P(c, 8, 32 + k * 3, w[k], 1, '#b7c7ba');
+}
+function dLaguna(c, f) {
+  P(c, 0, 0, 36, 64, '#1e1b4b');
+  for (let y = 4; y < 21; y++) for (let x = 10; x < 27; x++) { const r = Math.hypot(x - 18, y - 12); if (r <= 7) D1(c, x, y, r >= 4.5 && r <= 5.6 ? '#f59e0b' : '#fbbf24'); }
+  P(c, 16, 9, 4, 7, '#b45309');
+  const ph = f % 30, typed = Math.min(20, Math.floor(ph * 1.2)), dots = Math.max(0, Math.min(8, Math.floor((ph - 14) / 1.5)));
+  P(c, 5, 24, 26, 9, '#312e81'); P(c, 5, 24, 26, 1, '#4f46e5'); P(c, 7, 27, typed, 3, '#c7d2fe');
+  P(c, 5, 36, 26, 9, '#312e81'); P(c, 5, 36, 26, 1, '#4f46e5'); for (let i = 0; i < dots; i++) P(c, 8 + i * 3, 39, 2, 2, '#c7d2fe');
+  if (ph < 14 && f % 6 < 3) P(c, 8 + typed, 26, 1, 5, '#fff');
+  const done = ph >= 24; P(c, 5, 49, 26, 9, done ? '#34d399' : '#a78bfa');
+  if (done) { line(c, 15, 53, 17, 55, '#fff'); line(c, 17, 55, 22, 51, '#fff'); }
+  P(c, 5, 60, 12, 3, '#fff'); P(c, 19, 60, 12, 3, '#4f46e5');
+}
+const DRAW = [dScore, dDbay, dSketch, dFantek, dBean, dLaguna];
+
+/* ===== Dựng DOM động ===== */
+const stage = $('#stage'), scenes = $$('.scene');
+// Ảnh đại diện: vẽ pixel trước (luôn có gì để xem), rồi thay bằng ảnh thật nếu avatar.jpg tải được.
+$$('.bust').forEach(cv => {
+  const c = setup(cv, SPR.w, SPR.h + 10, +cv.dataset.s); drawBust(c, !!cv.dataset.cap);
+  // setup() đặt width/height inline theo tỉ lệ sprite; trong .me thì để CSS phủ khung
+  if (cv.closest('.me')) { cv.style.width = ''; cv.style.height = ''; }
+});
+{
+  const img = new Image();
+  img.onload = () => $$('.me').forEach(box => {
+    const p = img.cloneNode();
+    p.className = 'photo'; p.alt = 'Nguyễn Trung Quân';
+    box.prepend(p); // ảnh nằm dưới, canvas ở trên
+    // ảnh thật đã có người → canvas chỉ còn vẽ nón, căn theo đỉnh đầu trong ảnh
+    const cv = box.querySelector('canvas');
+    if (cv) drawBust(cv.getContext('2d'), !!cv.dataset.cap, true, AV_CAP[0], AV_CAP[1]);
+  });
+  img.src = AVATAR; // không có file: onerror im lặng, giữ bản pixel
+}
+
+$('#msList').append(...MILESTONES.map(([y, t, d], i) => {
+  const m = document.createElement('div'); m.className = 'ms panel'; m.style.left = (MS_X[i] - 86) + 'px';
+  m.innerHTML = `<div class="yr">${y}</div><h3>${t}</h3><p>${d}</p>`;
+  const dot = document.createElement('div'); dot.className = 'dot'; dot.style.left = MS_X[i] + 'px'; dot.style.opacity = 0; dot.dataset.i = i;
+  m.dataset.i = i; return m;
+}));
+MILESTONES.forEach((_, i) => { const dot = document.createElement('div'); dot.className = 'dot ms-dot'; dot.style.left = MS_X[i] + 'px'; dot.style.visibility = 'hidden'; $('#s1').append(dot); });
+const msEls = $$('#msList .ms'), msDots = $$('.ms-dot');
+
+const phoneCv = [];
+$('#phones').append(...APPS.map(([n, b, d], i) => {
+  const col = document.createElement('div'); col.className = 'col pop'; col.style.setProperty('--d', (0.3 + i * .8) + 's');
+  col.innerHTML = `<div class="phone"><canvas></canvas></div><b>${n}</b><span class="chip">${b}</span><p>${d}</p>`;
+  phoneCv.push(setup(col.querySelector('canvas'), 36, 64, 3)); return col;
+}));
+$('#chips').append(...CHIPS.map((t, i) => { const s = document.createElement('span'); s.className = 'chip pop'; s.style.setProperty('--d', (1 + i * .35) + 's'); s.textContent = t; return s; }));
+$('#tiles').append(...TILES.map(([v, l, suf], i) => {
+  const t = document.createElement('div'); t.className = 'tile panel pop'; t.style.setProperty('--d', (.3 + i * .25) + 's');
+  t.innerHTML = `<div class="num" data-v="${v}" data-s="${suf}">0</div><span>${l}</span>`; return t;
+}));
+$('#tags').append(...TAGS.map((t, i) => { const s = document.createElement('span'); s.className = 'chip pop'; s.style.setProperty('--d', (1.6 + i * .3) + 's'); s.textContent = t; return s; }));
+$('#runs').append(...RUNS.map(([b, k, t, d], i) => {
+  const r = document.createElement('div'); r.className = 'run panel pop'; r.style.setProperty('--d', (.5 + i * .65) + 's');
+  r.innerHTML = `<span class="chip ${k}">${b}</span><div>${t}<small>${d}</small></div>`; return r;
+}));
+const nums = $$('.tile .num');
+
+const wc = setup($('#cWalk'), 16, 30, 4);
+const conf = $('#conf').getContext('2d'); conf.imageSmoothingEnabled = false;
+let parts = [];
+const COL = ['#0894ff', '#c959dd', '#ff2e54', '#ff9004', '#ffd166', '#7cfc00', '#fbf8ee'];
+const initConf = () => { parts = Array.from({ length: 80 }, () => ({ x: Math.random() * 240, y: -Math.random() * 135, v: 18 + Math.random() * 40, c: COL[Math.random() * COL.length | 0], s: Math.random() < .3 ? 3 : 2 })); };
+
+/* ===== HUD ===== */
+const segsEl = $('#segs');
+SC.forEach((d, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'seg'; b.style.setProperty('--w', d); b.setAttribute('aria-label', 'Chuyển tới cảnh ' + (i + 1)); b.innerHTML = '<i></i>'; b.onclick = () => seek(i); segsEl.append(b); });
+const segs = $$('.seg');
+
+/* ===== Đồng hồ chính ===== */
+let t = 0, last = performance.now(), playing = true, userPaused = false, cur = -1, lastWalk = '', lastF = [], ease = x => 1 - (1 - x) ** 3;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function setPlay(p, byUser) {
+  playing = p; if (byUser) userPaused = !p;
+  stage.classList.toggle('paused', !p);
+  $('#icPlay').className = p ? 'ic-pause' : 'ic-play'; $('#bPlay').setAttribute('aria-label', p ? 'Tạm dừng' : 'Phát');
+}
+function setScene(i) {
+  scenes.forEach(s => s.classList.remove('on')); void stage.offsetWidth; scenes[i].classList.add('on'); cur = i;
+  msEls.forEach(m => m.classList.remove('show')); msDots.forEach(d => d.style.visibility = 'hidden'); lastWalk = ''; lastF = [];
+  if (i === 1) msEls.forEach(m => m.style.setProperty('--drop', Math.max(10, 400 - 120 - m.offsetHeight) + 'px'));
+  if (i === 6) initConf();
+}
+function seek(i) { t = ST[i]; cur = -1; update(0); }
+$('#bPlay').onclick = () => setPlay(!playing, true);
+$('#bReplay').onclick = () => { seek(0); setPlay(true, true); };
+addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); setPlay(!playing, true); } });
+
+function update(dt) {
+  let i = SC.length - 1; while (i > 0 && t < ST[i]) i--;
+  if (i !== cur) setScene(i);
+  const l = t - ST[i];
+  if (i === 1) {
+    const x = 60 + 790 * Math.min(1, l / 6.6), moving = l < 6.7, fr = moving ? Math.floor(t * 6) % 2 : 0, cap = l > 6.6, key = fr + '' + cap;
+    $('#walker').style.transform = `translateX(${x - 28}px)`;
+    if (key !== lastWalk) { drawWalker(wc, fr, cap); lastWalk = key; }
+    MS_X.forEach((mx, k) => { if (x + 12 >= mx) { msEls[k].classList.add('show'); msDots[k].style.visibility = 'visible'; } });
+  }
+  if (i === 2) DRAW.forEach((fn, k) => {
+    const on = 0.5 + k * .8, f = l >= on ? Math.floor((l - on) * 10) : -1;
+    if (lastF[k] === f) return; lastF[k] = f;
+    if (f < 0) { P(phoneCv[k], 0, 0, 36, 64, '#05080a'); P(phoneCv[k], 16, 30, 4, 4, '#1c2a22'); } else fn(phoneCv[k], f);
+  });
+  if (i === 4) nums.forEach((n, k) => { const p = ease(Math.max(0, Math.min(1, (l - .7 - k * .25) / 1.8))); n.textContent = Math.floor(+n.dataset.v * p) + (p >= 1 ? n.dataset.s : ''); });
+  if (i === 6) {
+    conf.clearRect(0, 0, 240, 135);
+    parts.forEach(p => { p.y += p.v * dt; if (p.y > 135) { p.y = -4; p.x = Math.random() * 240; } P(conf, p.x, p.y, p.s, p.s, p.c); });
+  }
+  segs.forEach((s, k) => { s.classList.toggle('done', k < i); s.firstChild.style.width = k === i ? (l / SC[k] * 100) + '%' : ''; });
+}
+function frame(now) {
+  const dt = Math.min(.1, (now - last) / 1000); last = now;
+  if (playing) { t += dt; if (t >= TOTAL) t = 0; }
+  update(playing ? dt : 0); requestAnimationFrame(frame);
+}
+
+/* ===== Co giãn khung 16:9 vừa iframe ===== */
+function fit() { const s = Math.min(innerWidth / 960, innerHeight / 540); stage.style.transform = `translate(-50%,-50%) scale(${s})`; }
+addEventListener('resize', fit); fit();
+
+/* Tự dừng khi cuộn khỏi màn hình, tự phát lại khi quay về (nếu người xem không chủ động dừng) */
+if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { if (e.isIntersecting) { if (!userPaused && !reduce) setPlay(true); } else setPlay(false); }, { threshold: .1 }).observe($('#wrap'));
+setPlay(!reduce, false); userPaused = reduce;
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

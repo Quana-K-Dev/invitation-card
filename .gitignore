@@ -1,0 +1,7 @@
+# Local browser checks; not part of the deployed site.
+check.mjs
+audit.mjs
+audit-anim.mjs
+shot.mjs
+measure.mjs
+.DS_Store
