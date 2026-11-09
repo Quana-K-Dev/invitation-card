@@ -386,7 +386,10 @@ function dSwapy(c, f) {
   if (tap) {
     const [x, y, hit] = tap, K = '#14141f', S = '#e39a6b', Y = '#ffd166';
     if (hit) { P(c, x - 3, y - 3, 7, 1, Y); P(c, x - 3, y + 3, 7, 1, Y); P(c, x - 3, y - 3, 1, 7, Y); P(c, x + 3, y - 3, 1, 7, Y); }
-    P(c, x - 1, y, 3, 12, K); P(c, x - 1, y + 5, 7, 7, K); P(c, x, y + 1, 1, 10, S); P(c, x, y + 6, 5, 5, S);
+    // bàn tay pixel chạm chéo từ dưới phải lên; đầu ngón trỏ tại (x, y)
+    ['.KK..........', 'KSSK.........', 'KSSSK........', '.KSSSK.......', '..KSSSK......', '...KSSSKKK...',
+     '...KSSSSSSKK.', '..KKSSSSSSSSK', '.KSSKSSSSSSSK', '.KSSSSSSSSSSK', '..KKSSSSSSSK.', '....KSSSSSK..', '.....KKKKK...']
+      .forEach((r, j) => [...r].forEach((ch, i) => ch !== '.' && D1(c, x - 1 + i, y + j, ch === 'K' ? K : S)));
   }
 }
 
@@ -506,7 +509,7 @@ function update(dt) {
 }
 function frame(now) {
   const dt = Math.min(.1, (now - last) / 1000); last = now;
-  if (playing) { t += dt; if (t >= TOTAL) t = 0; }
+  if (playing) { t += dt; if (t >= TOTAL) { t = 0; if (parent !== window) parent.postMessage('anim-end', '/'); } } // thiệp tự đóng bản toàn màn hình
   update(playing ? dt : 0); requestAnimationFrame(frame);
 }
 function fit() { const s = Math.min(innerWidth / 960, innerHeight / 540); stage.style.transform = `translate(-50%,-50%) scale(${s})`; }

@@ -233,6 +233,12 @@
   .rail { display: flex; gap: 20px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scroll-padding-inline: var(--wrap);
     margin: 0 calc(-1 * var(--wrap)); padding: 0 var(--wrap) 8px; scrollbar-width: none; }
   .rail::-webkit-scrollbar { display: none; }
+  /* Hành trình: section cao thêm đúng quãng cuộn ngang (--d từ JS); khung dính lại, cuộn dọc → rail chạy ngang, hết thì cuộn tiếp bình thường */
+  .hs { padding-block: 0; height: calc(100svh + var(--d, 0px)); }
+  .hs-pin { position: sticky; top: 0; min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; padding: 72px 0 24px; } /* minmax(0): rail không nới rộng cột */
+  .hs .narrow { width: 100%; } /* margin auto trong grid → co theo nội dung rail; ép full */
+  .hs .rail { scroll-snap-type: none; }
+  .hs .card { min-height: min(400px, 52svh); }
   /* Thẻ chỉ mờ hiện: translateY tạo vùng cuộn dọc và cắt mép trong rail. */
   .rail > .reveal { transform: none; }
   .card { flex: 0 0 min(78vw, 340px); scroll-snap-align: start; min-height: 400px; padding: 32px; border-radius: 28px; background: #161617;
@@ -248,16 +254,39 @@
   .code { margin: 0; padding: 28px; border-radius: 24px; background: #161617; overflow-x: auto; white-space: pre; color: #f5f5f7;
     font: 500 clamp(.8rem, 1.5vw, .95rem) / 1.75 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; }
   .code > span { display: block; }
-  .code > .reveal { transform: none; transition-duration: .35s; transition-delay: calc(var(--i) * .12s); } /* hiện từng dòng như đang gõ */
+  .code > .reveal { transform: none; transition-duration: .3s; transition-delay: calc(var(--i) * .05s); } /* hiện từng dòng như đang gõ */
+  .code input { font: inherit; letter-spacing: 0; border: 0; border-bottom: 1px dashed currentColor; border-radius: 4px; padding: 0 3px; background: rgba(252,106,93,.12); }
   .code .kw { color: #ff7ab2; } .code .ty { color: #5dd8ff; } .code .st { color: #fc6a5d; } .code .nu { color: #d0bf69; } .code .cm { color: #8a96a3; }
-  .mini { justify-self: center; width: min(250px, 68vw); aspect-ratio: 9 / 19.5; padding: 10px; border-radius: 44px; background: #1d1d1f;
-    box-shadow: inset 0 0 0 1px #48484a, 0 40px 80px -30px rgba(8,148,255,.45); }
-  .mini.reveal { transition-delay: 1.5s; }
-  .mini > div { height: 100%; border-radius: 35px; background: #f5f5f7; color: var(--ink); display: grid; align-content: center; justify-items: center; gap: 6px; padding: 20px; text-align: center; }
+  /* Điện thoại 3D 9:16: code gõ xong → xoay vào, "hot reload" chớp màn, chữ nổi lớp; cuộn trang làm máy xoay (--ry từ JS) */
+  .flutter { perspective: 1400px; }
+  .mini { position: relative; justify-self: center; width: min(260px, 68vw); aspect-ratio: 9 / 16; padding: 10px; border-radius: 40px; background: #1d1d1f;
+    box-shadow: inset 0 0 0 1px #48484a, 0 40px 80px -30px rgba(8,148,255,.45); transform-style: preserve-3d;
+    rotate: y var(--ry, -16deg); animation: float 5s ease-in-out infinite; }
+  .mini::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #0b0b0c; transform: translateZ(-18px); box-shadow: inset 0 0 0 2px #2c2c2e; } /* thân máy dày */
+  @keyframes float { 50% { translate: 0 -14px; } }
+  .mini.reveal:not(.in) { transform: translateZ(-320px) rotateY(-80deg); }
+  .mini.in { transform: rotateX(8deg); transition: opacity .6s .4s, transform 1s var(--spring) .4s; }
+  .mini > div { position: relative; height: 100%; border-radius: 31px; background: #f5f5f7; color: var(--ink); display: grid; align-content: center; justify-items: center; gap: 6px; padding: 20px; text-align: center; transform-style: preserve-3d; }
+  .mini > div::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; /* vệt phản chiếu chạy theo góc xoay */
+    background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.55) 48%, transparent 60%) var(--g, 50%) 0 / 300% 100% no-repeat; }
+  .mini small { transform: translateZ(22px); }
+  .mini b { transform: translateZ(40px); }
+  .mini em { position: absolute; top: 22px; left: 50%; translate: -50%; transform: translateZ(70px); font-style: normal; font-size: .75rem; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px; background: #161617; color: #fff; white-space: nowrap; opacity: 0; }
+  .mini.in em { animation: hr 2s 1s both; }
+  @keyframes hr { 12%, 75% { opacity: 1; } }
+  .mini.in > div { animation: flash .9s 1s; }
+  @keyframes flash { 25% { background: #fff; box-shadow: inset 0 0 0 3px #0894ff, 0 0 60px #0894ff; } }
   .mini small { color: var(--ink-muted); font-weight: 600; font-size: .85rem; }
   .mini b { font-size: 1.6rem; letter-spacing: -.03em; line-height: 1.1; overflow-wrap: anywhere; }
-  .mini i { font-style: normal; margin-top: 14px; padding: 10px 18px; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 600; font-size: .9rem; }
-  @media (max-width: 734px) { .flutter { grid-template-columns: minmax(0, 1fr); gap: 36px; } }
+  .mini a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 14px; padding: 0 22px; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 600; font-size: .95rem; text-decoration: none; transform: translateZ(60px); }
+  /* Bấm Xác nhận: mở Zalo (tab mới) + màn hình chuyển sang ✓ */
+  .mini .ok { position: absolute; inset: 0; border-radius: inherit; background: #f5f5f7; display: grid; align-content: center; justify-items: center; gap: 6px; padding: 20px;
+    opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; transform: translateZ(80px); }
+  .mini.sent .ok { opacity: 1; visibility: visible; }
+  .mini .ok i { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: #34c759; color: #fff; font: 700 2.2rem/1 inherit; }
+  .mini.sent .ok i { animation: pop .6s var(--spring); }
+  @media (max-width: 734px) { .flutter { grid-template-columns: minmax(0, 1fr); gap: 36px; } .code { white-space: pre-wrap; overflow-wrap: anywhere; padding: 20px; } }
   .agenda { list-style: none; }
   .agenda li { display: grid; grid-template-columns: 140px 1fr; gap: 24px; padding: 28px 0; border-top: 1px solid #333336; }
   .agenda time { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -336,9 +365,9 @@
   .ph .scr { position: relative; display: grid; align-content: center; justify-items: center; gap: 1.2cqh; height: 100%; border-radius: 5.8cqh; overflow: hidden;
     background: radial-gradient(80% 50% at 50% 20%, #355f78, transparent), #1d3a28; transition: border-radius .6s .9s; }
   .ph .scr::before { content: ''; position: absolute; top: 1.4cqh; left: 50%; width: 30%; height: 3cqh; translate: -50%; border-radius: 99px; background: #000; } /* dynamic island */
-  .ph .ic { width: 11cqh; aspect-ratio: 1; border-radius: 2.6cqh; display: grid; place-items: center; font-size: 6cqh; background: var(--grad); background-size: 300% 100%; animation: flow 6s linear infinite; }
+  .ph .ic { width: 11cqh; aspect-ratio: 1; border-radius: 2.6cqh; display: grid; place-items: center; font-size: max(12px, 6cqh); background: var(--grad); background-size: 300% 100%; animation: flow 6s linear infinite; }
   .ph .scr b { font-size: max(12px, 3cqh); font-weight: 700; }
-  .ph .scr small { font-size: max(11px, 2.3cqh); color: rgba(255,255,255,.7); }
+  .ph .scr small { font-size: max(12px, 2.3cqh); color: rgba(255,255,255,.7); }
   .ph .ring { position: absolute; left: 50%; top: 50%; width: 10cqh; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: 2px solid rgba(255,255,255,.8); opacity: 0; }
   .anim .play:not(:disabled) .ring { animation: ring 2s ease-out infinite; }
   @keyframes ring { from { scale: .4; opacity: .9; } to { scale: 2.6; opacity: 0; } }
@@ -368,6 +397,13 @@
   .anim .poster::after { content: ''; position: absolute; inset: 0;
     background-image: linear-gradient(rgba(255,255,255,.04) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,.04) 2px, transparent 2px);
     background-size: 24px 24px; }
+  /* Xem toàn màn hình ngay trong trang (không đổi trang → giữ nguyên vị trí cuộn). Máy dọc: xoay khung 90° cho video nằm ngang */
+  .full { margin: 0; border: 0; padding: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; background: #000; overflow: hidden; }
+  .full::backdrop { background: #000; }
+  .full iframe { position: absolute; left: 50%; top: 50%; width: 100vw; height: 100dvh; translate: -50% -50%; border: 0; }
+  @media (orientation: portrait) { .full iframe { width: 100dvh; height: 100vw; rotate: 90deg; } }
+  .full .x { position: absolute; z-index: 1; top: calc(10px + env(safe-area-inset-top)); right: 10px; width: 48px; height: 48px; border: 0; border-radius: 50%; color: #fff; font: 600 1.4rem/1 inherit; cursor: pointer; }
+  body:has(.full[open]) { overflow: hidden; }
   .anim-note { margin-top: 18px; color: var(--muted); font-size: 1rem; text-align: center; }
   @media (max-width: 734px) { .anim { border-radius: 20px; } }
 
@@ -477,11 +513,11 @@
       <p id="statement"></p>
     </section>
 
-    <section>
-      <div class="narrow">
-        <div class="sec-head reveal"><h2>Hành trình<br><span class="grad">bốn năm.</span></h2><p>Vuốt để xem từng chặng.</p></div>
+    <section class="hs" id="hs">
+      <div class="hs-pin"><div class="narrow">
+        <div class="sec-head reveal"><h2>Hành trình<br><span class="grad">bốn năm.</span></h2><p>Cuộn tiếp để xem từng chặng.</p></div>
         <div class="rail" id="rail" tabindex="0" role="region" aria-label="Hành trình bốn năm"></div>
-      </div>
+      </div></div>
     </section>
 
     <section id="photosSec" hidden>
@@ -497,10 +533,11 @@
 
     <section>
       <div class="narrow">
-        <div class="sec-head reveal"><h2>Mình viết app<br><span class="grad">bằng Flutter.</span></h2><p>Vài dòng code, một app chạy được cả iPhone lẫn Android.</p></div>
+        <div class="sec-head reveal"><h2>Mình viết app<br><span class="grad">bằng Flutter.</span></h2><p>Thử sửa tên trong code, điện thoại cập nhật ngay. Rồi bấm “Xác nhận”.</p></div>
         <div class="flutter">
-          <pre class="code" id="code" tabindex="0" aria-label="Đoạn code Flutter tạo thiệp mời"></pre>
-          <div class="mini reveal" aria-hidden="true"><div><small>Thiệp mời</small><b id="miniTo"></b><small>14.11.2026 · Hội trường A</small><i>Xác nhận</i></div></div>
+          <pre class="code" id="code" aria-label="Đoạn code Flutter tạo thiệp mời"></pre>
+          <div class="mini reveal" id="mini"><div><em aria-hidden="true">⚡ Hot reload</em><small>Thiệp mời</small><b id="miniTo"></b><small>14.11.2026 · Hội trường A</small>
+            <a id="miniOk" target="_blank" rel="noopener">Xác nhận</a><span class="ok" id="miniDone" role="status"></span></div></div>
         </div>
       </div>
     </section>
@@ -627,6 +664,7 @@
     <a id="mapBtn3" target="_blank" rel="noopener">Chỉ đường</a>
   </div>
   <div class="toast lg" id="toast" role="status" aria-live="polite"></div>
+  <dialog class="full" id="full" aria-label="Hoạt ảnh toàn màn hình"><button class="x lg" type="button" id="fullX" aria-label="Đóng, quay lại thiệp">✕</button></dialog>
   <dialog class="viewer" id="viewer" aria-label="Ảnh kỷ niệm">
     <button class="x lg" type="button" id="vClose" aria-label="Đóng">✕</button>
     <button class="prev lg" type="button" id="vPrev" aria-label="Ảnh trước">‹</button>
@@ -849,7 +887,7 @@ $('mapBtn').href = $('mapBtn2').href = $('mapBtn3').href = https(INVITE.mapUrl)
 // RSVP không có backend: nhắn Zalo (kênh chính) hoặc gửi email.
 const zalo = String(INVITE.zalo).replace(/\D/g, '');
 const subject = 'Xác nhận tham dự lễ tốt nghiệp của ' + INVITE.name;
-$('rsvpBtn').href = $('rsvpBtn2').href = $('rsvpBtn3').href = $('navRsvp').href = 'https://zalo.me/' + zalo;
+$('rsvpBtn').href = $('rsvpBtn2').href = $('rsvpBtn3').href = $('navRsvp').href = $('miniOk').href = 'https://zalo.me/' + zalo;
 $('mailBtn').href = 'mailto:' + INVITE.email + '?subject=' + encodeURIComponent(subject);
 $('mailBtn').textContent = 'Hoặc email ' + INVITE.email + ' ›';
 
@@ -890,12 +928,28 @@ $('stats').append(...INVITE.stats.map(([n, l], i) => {
 // Đoạn code Flutter: [[class, chữ], ...] mỗi dòng; tên khách chèn bằng textContent → an toàn
 const who = (guest || 'Bạn').slice(0, 40);
 $('miniTo').textContent = 'Gửi ' + who;
+// Tên trong code là ô sửa được: gõ → điện thoại "hot reload" ngay
+const nameIn = el('input', 'st');
+Object.assign(nameIn, { value: who, maxLength: 40, spellcheck: false, size: Math.max(2, who.length), autocomplete: 'off' });
+nameIn.setAttribute('aria-label', 'Sửa tên người nhận, điện thoại cập nhật ngay');
+const myName = () => nameIn.value.trim() || 'Bạn';
+nameIn.oninput = () => {
+  nameIn.size = Math.max(2, nameIn.value.length);
+  $('miniTo').textContent = 'Gửi ' + myName(); $('mini').classList.remove('sent');
+  if (reduce) return;
+  $('mini').firstChild.animate([{}, { background: '#fff', boxShadow: 'inset 0 0 0 3px #0894ff, 0 0 60px #0894ff' }, {}], 500);
+  $('mini').querySelector('em').animate([{ opacity: 0 }, { opacity: 1 }, { opacity: 1 }, { opacity: 0 }], 1400);
+};
+$('miniOk').addEventListener('click', () => { // vẫn mở Zalo như link thường; màn hình chuyển sang ✓
+  $('miniDone').replaceChildren(el('i', '', '✓'), el('b', 'grad', 'Đã gửi!'), el('small', '', 'Hẹn gặp ' + myName() + ' ngày 14.11'));
+  $('mini').classList.add('sent');
+});
 $('code').append(...[
   [['cm', '// thiệp này, nếu viết bằng Flutter']],
   [['kw', 'class '], ['ty', 'GraduationInvite'], ['kw', ' extends '], ['ty', 'StatelessWidget'], ['', ' {']],
   [['', '  '], ['ty', 'Widget'], ['', ' build('], ['ty', 'BuildContext'], ['', ' context) {']],
   [['kw', '    return '], ['ty', 'Invite'], ['', '(']],
-  [['', '      to: '], ['st', "'" + who + "'"], ['', ',']],
+  [['', '      to: '], ['st', "'"], ['in'], ['st', "'"], ['', ',']],
   [['', '      date: '], ['ty', 'DateTime'], ['', '('], ['nu', '2026'], ['', ', '], ['nu', '11'], ['', ', '], ['nu', '14'], ['', ', '], ['nu', '10'], ['', ', '], ['nu', '30'], ['', '),']],
   [['', '      venue: '], ['st', "'Hội trường A'"], ['', ',']],
   [['', '      onConfirm: () => '], ['ty', 'Zalo'], ['', '.send('], ['st', "'Mình đi!'"], ['', '),']],
@@ -904,7 +958,7 @@ $('code').append(...[
   [['', '}']],
 ].map((toks, i) => {
   const ln = el('span', 'reveal'); ln.style.setProperty('--i', i);
-  ln.append(...toks.map(([c, t]) => el('span', c, t)));
+  ln.append(...toks.map(([c, t]) => c === 'in' ? nameIn : el('span', c, t)));
   return ln;
 }));
 $('agenda').append(...INVITE.agenda.map(([t, w, n]) => {
@@ -945,9 +999,22 @@ if (INVITE.animUrl) {
   $('animNote').textContent = fun
     ? 'Mình kể lại bốn năm bằng hoạt ảnh pixel. Bấm xem rồi khen nha.'
     : 'Một chút hành trình bốn năm, kể lại bằng hoạt ảnh pixel.';
+  // Toàn màn hình: <dialog> trong trang → đóng là về đúng chỗ cũ. Hoạt ảnh chạy hết 1 vòng thì báo 'anim-end' → tự đóng.
+  const F = $('full'), canFull = typeof F.showModal === 'function';
+  const openFull = () => {
+    const f = el('iframe');
+    Object.assign(f, { src: INVITE.animUrl, title: 'Hoạt ảnh pixel: hành trình bốn năm của ' + INVITE.name });
+    F.append(f); F.showModal(); $('fullX').focus();
+    // Android: thử toàn màn hình thật + khoá ngang; iPhone không hỗ trợ → CSS tự xoay khung khi máy dọc
+    F.requestFullscreen?.().then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
+  };
+  F.addEventListener('close', () => { F.querySelector('iframe')?.remove(); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); });
+  $('fullX').onclick = () => F.close();
+  addEventListener('message', e => { if (e.data === 'anim-end' && F.open && e.source === F.querySelector('iframe')?.contentWindow) F.close(); });
+  if (canFull) $('animOpen').onclick = e => { e.preventDefault(); openFull(); }; // không có <dialog>: link mở tab mới như cũ
   $('animPlay').onclick = () => {
-    // Màn hẹp: khung 16:9 chỉ ~300px, chữ pixel không đọc nổi → mở tab mới cho hoạt ảnh chiếm cả màn.
-    if (innerWidth < 735) return void open(INVITE.animUrl, '_blank', 'noopener');
+    // Màn hẹp: khung 16:9 chỉ ~300px, chữ pixel không đọc nổi → phát toàn màn hình (máy dọc vẫn xem được, khung tự xoay).
+    if (innerWidth < 735) return void (canFull ? openFull() : open(INVITE.animUrl, '_blank', 'noopener'));
     if ($('anim').classList.contains('open')) return;
     $('anim').classList.add('open'); $('animPlay').disabled = true; // tay chạm (~.6s) → màn hình phóng to (~1,5s) → nhúng video từ cảnh đầu
     setTimeout(() => {
@@ -958,7 +1025,7 @@ if (INVITE.animUrl) {
       $('anim').prepend(f);
     }, reduce ? 0 : 1500);
   };
-  if (innerWidth < 735) $('animPlay').querySelector('.meta').textContent = '9 cảnh · 78 giây · mở tab mới, nên xoay ngang máy';
+  if (innerWidth < 735) $('animPlay').querySelector('.meta').textContent = '9 cảnh · 78 giây · phát toàn màn hình';
 }
 
 // Album bên ngoài: khách FORMAL xem albumUrlFormal, còn lại xem albumUrl.
@@ -1056,8 +1123,10 @@ if ('IntersectionObserver' in window) {
 
 // Hiệu ứng theo cuộn: hero thu nhỏ + mờ, viền Siri tắt dần, chữ sáng từng từ
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const hero = $('heroIn'), st = $('statement');
-let ticking = false;
+const hero = $('heroIn'), st = $('statement'), mini = $('mini');
+let ticking = false, hsD = 0;
+const hsFit = () => { hsD = $('rail').scrollWidth - $('rail').clientWidth; $('hs').style.setProperty('--d', hsD + 'px'); };
+hsFit(); addEventListener('resize', hsFit); addEventListener('load', hsFit); // load: font xong, bề rộng thẻ chốt
 function onScroll() {
   ticking = false;
   const y = scrollY, vh = innerHeight, p = Math.min(1, y / vh);
@@ -1067,6 +1136,12 @@ function onScroll() {
   }
   const siri = Math.max(0, 1 - p * 2); // đặt trên chính phần tử, tránh tính lại style toàn trang
   $('siri').style.setProperty('--siri', siri); $('siri').classList.toggle('off', siri === 0);
+  if (!reduce) { // điện thoại Flutter xoay theo vị trí trên màn hình: -1 (dưới) → 1 (trên)
+    const mr = mini.getBoundingClientRect(), q = Math.max(-1, Math.min(1, (vh / 2 - mr.top - mr.height / 2) / vh));
+    if (mr.bottom > 0 && mr.top < vh) { mini.style.setProperty('--ry', q * 40 - 12 + 'deg'); mini.style.setProperty('--g', 50 + q * 70 + '%'); }
+  }
+  const hr = $('hs').getBoundingClientRect(); // hành trình: cuộn dọc trong lúc khung dính → cuộn ngang
+  if (hsD > 0 && hr.bottom > 0 && hr.top < vh) $('rail').scrollLeft = Math.min(1, -hr.top / hsD) * hsD;
   const r = st.getBoundingClientRect();
   const k = Math.min(1, Math.max(0, (vh * .8 - r.top) / (r.height + vh * .3)));
   const lit = reduce ? words.length : Math.round(k * words.length);
