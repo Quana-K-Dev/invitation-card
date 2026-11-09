@@ -1063,8 +1063,7 @@ if (INVITE.animUrl) {
   addEventListener('message', e => { if (e.data === 'anim-end' && F.open && e.source === F.querySelector('iframe')?.contentWindow) F.close(); });
   if (canFull) $('animOpen').onclick = e => { e.preventDefault(); openFull(); }; // không có <dialog>: link mở tab mới như cũ
   $('animPlay').onclick = () => {
-    // Màn hẹp: khung 16:9 chỉ ~300px, chữ pixel không đọc nổi → phát toàn màn hình (máy dọc vẫn xem được, khung tự xoay).
-    if (innerWidth < 735) return void (canFull ? openFull() : open(INVITE.animUrl, '_blank', 'noopener'));
+    // Mọi cỡ màn: tay chạm → phát ngay trong khung. Toàn màn hình chỉ khi bấm "Mở toàn màn hình".
     if ($('anim').classList.contains('open')) return;
     $('anim').classList.add('open'); $('animPlay').disabled = true; // tay chạm (~.6s) → màn hình phóng to (~1,5s) → nhúng video từ cảnh đầu
     setTimeout(() => {
@@ -1075,7 +1074,6 @@ if (INVITE.animUrl) {
       $('anim').prepend(f);
     }, reduce ? 0 : 1500);
   };
-  if (innerWidth < 735) $('animPlay').querySelector('.meta').textContent = '9 cảnh · 78 giây · phát toàn màn hình';
 }
 
 // Album bên ngoài: khách FORMAL xem albumUrlFormal, còn lại xem albumUrl.
@@ -1176,7 +1174,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const hero = $('heroIn'), st = $('statement'), mini = $('mini');
 let ticking = false, hsD = 0;
 const hsFit = () => { hsD = $('rail').scrollWidth - $('rail').clientWidth; $('hs').style.setProperty('--d', hsD + 'px'); };
-hsFit(); addEventListener('resize', hsFit); addEventListener('load', hsFit); // load: font xong, bề rộng thẻ chốt
+hsFit(); addEventListener('resize', hsFit); addEventListener('load', hsFit); document.fonts?.ready.then(hsFit); // font web có thể xong sau load → bề rộng thẻ đổi
 function onScroll() {
   ticking = false;
   const y = scrollY, vh = innerHeight, p = Math.min(1, y / vh);

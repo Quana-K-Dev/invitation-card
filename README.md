@@ -36,7 +36,8 @@ Chỉ nhận URL `https:`; link sai thì ẩn mục, không tạo nút giả.
 
 ## Hoạt ảnh
 Section "Bốn năm trong 78 giây". Phong bì đóng; bấm thì nắp lật, thiệp trượt lên, ~1,1s sau mới tải `iframe` nên trang vào nhanh.
-Màn < 735px và nút "Mở toàn màn hình": phát toàn màn hình ngay trong trang (`<dialog>`), máy dọc thì khung tự xoay ngang.
+Chạm điện thoại (mọi cỡ màn): tay nhấn, phát trong khung 16:9 tại chỗ.
+Chỉ nút "Mở toàn màn hình" mới phát toàn màn hình ngay trong trang (`<dialog>`), máy dọc thì khung tự xoay ngang.
 Hết 1 vòng, hoạt ảnh gửi `postMessage('anim-end')` → tự đóng, trang giữ nguyên vị trí cuộn.
 
 9 cảnh, viết cho người không biết gì về lập trình — không có từ kỹ thuật nào.
