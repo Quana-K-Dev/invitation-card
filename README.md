@@ -88,6 +88,9 @@ const FORMAL = ['BaHo', 'MeTrang', 'Chi7', 'Anh7', 'ChiMi', 'HuynhHuong', 'CoLan
 ```
 `FORMAL` cũng quyết định xem album Drive nào (xem mục Album).
 
+**Danh xưng (`XUNG`).** `[gọi khách, mình tự xưng]`, VD `BaHo: ['ba', 'con']`. Mọi chữ "bạn"/"mình" trên thiệp
+và trong hoạt ảnh tự đổi theo (giữ "bạn bè", "người bạn", đoạn code). Không khai báo thì giữ "bạn"/"mình".
+
 **3. Lịch trình riêng (tuỳ chọn).** Thêm khoá vào `who` của nhóm trong `PLANS`:
 ```js
 giadinh: { who: [...FORMAL, 'CoLan'], ... }
@@ -106,7 +109,8 @@ Mỗi khách thấy đúng lịch của nhóm mình. Khách lạ / không tên: 
 | Nhóm | Ai | Lịch |
 |---|---|---|
 | `anhem` | Phương Duy, Tẹo, Vy-chan | Thứ 6 tối nhậu → thứ 7 sáng chụp hình → trưa mình đi với gia đình → chiều cà phê + nhậu vòng hai |
-| `giadinh` | Ba Hồ, Mẹ Trang, Chị 7, Anh 7, Chị Mi, Huỳnh Hương | Thứ 7: 10:00 có mặt → 10:30 lễ → 12:00 chụp ảnh → ăn trưa tới 15–16:00 |
+| `giadinh` | Ba Hồ, Mẹ Trang, Chị 7, Anh 7, Chị Mi, Anh Thiện | Thứ 7: **07:00** vào hội trường cùng Quân → 10:30 lễ → 12:00 chụp ảnh → ăn trưa tới 15–16:00 (`early` cũng đổi mốc đầu Lịch trình buổi lễ) |
+| `trangtrong` | Huỳnh Hương | Thứ 7: 10:00 có mặt → 10:30 lễ → 12:00 chụp ảnh |
 | `dai_hoc` | Đệ An, Đệ Đăng, Đệ Hoàng, cháu gái | Thứ 7 ghé chụp hình (không bắt buộc) → hẹn riêng **Chủ Nhật 22/11/2026** |
 
 Thêm nhóm: thêm một khoá vào `PLANS` với `who` (danh sách khoá trong `GUESTS`), `ttl`, `sub`, `rows`.

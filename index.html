@@ -65,6 +65,8 @@
   .hero .eyebrow { font-size: 1.15rem; font-weight: 600; color: var(--muted); }
   .hero .guest { margin-top: 10px; font-size: 1.3rem; font-weight: 500; min-height: 1.5em; }
   .hero h1 { font-size: clamp(2.8rem, 14vw, 10.5rem); font-weight: 800; letter-spacing: -.05em; line-height: 1.02; margin: 8px 0 18px; padding-bottom: .06em; }
+  .hero h1 .grad { display: inline-block; padding-bottom: .16em; margin-bottom: -.16em; } /* nền gradient phủ cả đuôi "g", không đổi khoảng cách */
+  .shine::after { padding-bottom: .16em; }
   .hero .who { font-size: clamp(1.4rem, 3.6vw, 2.2rem); font-weight: 600; letter-spacing: -.02em; }
   .hero .meta { margin-top: 10px; font-size: clamp(1rem, 2vw, 1.25rem); color: var(--muted); }
   .hero .cta { margin-top: 36px; display: flex; gap: 28px; justify-content: center; align-items: center; flex-wrap: wrap; }
@@ -371,7 +373,7 @@
   .ph .ring { position: absolute; left: 50%; top: 50%; width: 10cqh; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: 2px solid rgba(255,255,255,.8); opacity: 0; }
   .anim .play:not(:disabled) .ring { animation: ring 2s ease-out infinite; }
   @keyframes ring { from { scale: .4; opacity: .9; } to { scale: 2.6; opacity: 0; } }
-  .hand { position: absolute; left: 50%; top: 44%; height: 62cqh; aspect-ratio: 100 / 140; translate: -49% -3%; transform-origin: 49% 3%; pointer-events: none;
+  .hand { position: absolute; left: 50%; top: 44%; height: 62cqh; aspect-ratio: 18 / 24; translate: -36% -1%; transform-origin: 36% 1%; /* đầu ngón trỏ pixel ở cột 6,5/18 */ pointer-events: none;
     transform: translate(95%, 40%) rotate(-24deg); animation: idle 2.4s ease-in-out infinite; filter: drop-shadow(0 20px 30px rgba(0,0,0,.5)); }
   .hand svg { width: 100%; height: 100%; display: block; }
   @keyframes idle { 0%, 100% { transform: translate(95%, 40%) rotate(-24deg); } 50% { transform: translate(90%, 34%) rotate(-20deg); } }
@@ -617,10 +619,7 @@
           <div class="poster" aria-hidden="true"></div>
           <button class="play" type="button" id="animPlay" aria-label="Chạm vào điện thoại để xem hoạt ảnh">
             <span class="ph" aria-hidden="true"><span class="scr"><span class="ic">🎓</span><b>Bốn năm của Quân</b><small>Chạm để mở</small><span class="ring"></span></span></span>
-            <span class="hand" aria-hidden="true"><svg viewBox="0 0 100 140"><g fill="#f2c29b" stroke="#1d1d1f" stroke-width="3" stroke-linejoin="round">
-              <rect x="6" y="66" width="18" height="42" rx="9" transform="rotate(-28 15 87)"/><rect x="72" y="58" width="16" height="30" rx="8"/><rect x="57" y="50" width="18" height="34" rx="9"/>
-              <rect x="38" y="4" width="22" height="80" rx="11"/><path d="M22 70 Q22 58 34 58 H82 Q90 58 90 70 V104 Q90 126 66 126 H44 Q22 126 22 104 Z"/></g>
-              <path d="M44 16 Q49 13 54 16" stroke="#d99a78" stroke-width="3" fill="none"/><rect x="30" y="118" width="52" height="22" rx="4" fill="#0071e3" stroke="#1d1d1f" stroke-width="3"/></svg></span>
+            <span class="hand" aria-hidden="true"><svg id="handSvg" viewBox="0 0 18 24" shape-rendering="crispEdges"></svg></span>
             <span class="cap"><b>Chạm vào điện thoại</b><span class="meta">9 cảnh · 78 giây · có thể tạm dừng</span></span>
           </button>
         </div>
@@ -732,6 +731,7 @@ const GUESTS = {
   Chi7: 'Chị 7',
   Anh7: 'Anh 7',
   ChiMi: 'Chị Mi',
+  AnhThien: 'Anh Thiện',
   HuynhHuong: 'Huỳnh Hương',
   PhuongDuy: 'Phương Duy',
   Teo: 'Tẹo',
@@ -742,7 +742,15 @@ const GUESTS = {
   ChauGai: 'Cháu Gái',
 };
 // Khách trong FORMAL giữ nội dung trang trọng; khách khác trong GUESTS nhận bản "nhây" (FUN đè lên INVITE)
-const FORMAL = ['BaHo', 'MeTrang', 'Chi7', 'Anh7', 'ChiMi', 'HuynhHuong'];
+const FORMAL = ['BaHo', 'MeTrang', 'Chi7', 'Anh7', 'ChiMi', 'AnhThien', 'HuynhHuong'];
+// Danh xưng: [gọi khách, Quân tự xưng]. Mọi chữ "bạn"/"mình" trên trang + trong hoạt ảnh đổi theo (trừ "bạn bè", "người bạn", đoạn code).
+// Khách không có ở đây (khách lạ, ?to=) giữ "bạn"/"mình".
+const XUNG = {
+  BaHo: ['ba', 'con'], MeTrang: ['mẹ', 'con'], Chi7: ['mẹ', 'con'], Anh7: ['ba', 'con'],
+  ChiMi: ['chị', 'em'], AnhThien: ['anh', 'em'], HuynhHuong: ['em', 'anh'],
+  PhuongDuy: ['mầy', 'tao'], Teo: ['mầy', 'tao'], VyChan: ['mầy', 'tao'],
+  DeAn: ['đệ', 'anh'], DeDang: ['đệ', 'anh'], DeHoang: ['đệ', 'anh'], ChauGai: ['cháu', 'cậu'],
+};
 
 /* Lịch trình riêng theo nhóm khách. Khách không thuộc nhóm nào thì ẩn mục này.
    [tiêu đề (HTML cho phép <br> + .grad), phụ đề, [[khi nào, việc gì, ghi chú], ...]] */
@@ -758,21 +766,32 @@ const PLANS = {
       ['Thứ 7 · 14/11\nchiều – tối', 'Cà phê rồi nhậu tiếp', 'Vòng hai. Ai còn trụ được thì ở lại.'],
     ],
   },
-  giadinh: { // Ba Hồ, Mẹ Trang, Chị 7, Anh 7, Chị Mi, Huỳnh Hương
-    who: FORMAL,
+  giadinh: { // Ba Hồ, Mẹ Trang, Chị 7, Anh 7, Chị Mi, Anh Thiện: vào hội trường cùng mình từ 7:00
+    who: ['BaHo', 'MeTrang', 'Chi7', 'Anh7', 'ChiMi', 'AnhThien'],
+    early: '07:00', // ghi đè giờ "Có mặt" trong Lịch trình buổi lễ
     ttl: ['Lịch của', 'gia đình.'],
-    sub: 'Buổi lễ buổi sáng, rồi cả nhà mình đi ăn trưa.',
+    sub: 'Cả nhà vào hội trường cùng mình từ sớm, xong lễ đi ăn trưa.',
     rows: [
-      ['Thứ 7 · 14/11\n10:00', 'Có mặt tại hội trường', 'Gửi xe ở Tao Đàn hoặc Cung Văn hoá Lao động, rồi đi bộ sang.'],
+      ['Thứ 7 · 14/11\n07:00', 'Vào hội trường cùng Quân', 'Gửi xe ở Tao Đàn hoặc Cung Văn hoá Lao động, rồi đi bộ sang.'],
       ['Thứ 7 · 14/11\n10:30', 'Buổi lễ tốt nghiệp', 'Hội trường A, lầu 6.'],
       ['Thứ 7 · 14/11\n12:00', 'Chụp ảnh lưu niệm', 'Chụp cùng cả nhà và bạn bè.'],
       ['Thứ 7 · 14/11\ntrưa → 15–16:00', 'Cả nhà đi ăn trưa', 'Mình dành buổi trưa cho gia đình.'],
     ],
   },
+  trangtrong: { // Huỳnh Hương: giờ chung 10:00
+    who: ['HuynhHuong'],
+    ttl: ['Lịch của', 'buổi lễ.'],
+    sub: 'Buổi lễ buổi sáng, xong lễ là chụp ảnh.',
+    rows: [
+      ['Thứ 7 · 14/11\n10:00', 'Có mặt tại hội trường', 'Gửi xe ở Tao Đàn hoặc Cung Văn hoá Lao động, rồi đi bộ sang.'],
+      ['Thứ 7 · 14/11\n10:30', 'Buổi lễ tốt nghiệp', 'Hội trường A, lầu 6.'],
+      ['Thứ 7 · 14/11\n12:00', 'Chụp ảnh lưu niệm', 'Chụp cùng mình và bạn bè.'],
+    ],
+  },
   dai_hoc: { // Đệ An, Đệ Đăng, Đệ Hoàng, các cháu gái: hẹn ngày khác
     who: ['DeAn', 'DeDang', 'DeHoang', 'ChauGai'],
     ttl: ['Hẹn mọi người', 'một ngày riêng.'],
-    sub: 'Thứ 7 mình kín lịch với gia đình, nên để dành một ngày đúng nghĩa cho hội mình.',
+    sub: 'Thứ 7 mình kín lịch với gia đình, nên để dành một ngày đúng nghĩa cho cả hội.',
     rows: [
       ['Thứ 7 · 14/11\nsáng', 'Ghé lễ chụp hình (nếu rảnh)', 'Không bắt buộc. Có mặt được thì vui lắm.'],
       ['Chủ nhật · 22/11\n(gợi ý)', 'Ăn uống, chơi bời đúng bài', 'Cả ngày, không ai phải về sớm. Rảnh hôm nào thì nhắn mình chốt lại.'],
@@ -844,6 +863,18 @@ if (guest) {
   $('you').textContent = g;
   document.title = 'Gửi ' + g + ' · Thiệp mời Lễ Tốt Nghiệp';
 }
+const xw = key && XUNG[key];
+function vx(s) { // "Bạn"/"bạn" → gọi khách, "Mình"/"mình" → tự xưng; giữ hoa đầu câu. \b không nhận chữ có dấu → dùng \p{L}
+  if (!xw) return s;
+  const cap = (w, up) => up ? w[0].toUpperCase() + w.slice(1) : w;
+  return s.replace(/(?<!\p{L})(?<!người )([Bb])ạn(?! bè)(?!\p{L})/gu, (_, b) => cap(xw[0], b === 'B'))
+    .replace(/(?<!\p{L})([Mm])ình(?!\p{L})/gu, (_, m) => cap(xw[1], m === 'M'));
+}
+const xungDoc = root => { // mọi text node trong root, trừ đoạn code Flutter ('Mình đi!' là lời khách)
+  if (!xw || !root) return;
+  const w = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n; (n = w.nextNode());) if (!n.parentElement.closest('#code,script,style')) n.data = vx(n.data);
+};
 
 /* ===== Màn hình khoá: giờ thật + thông báo thiệp, kéo lên / chạm / Enter để mở ===== */
 {
@@ -896,7 +927,7 @@ const pad = n => String(n).padStart(2, '0');
 function tick() {
   const ms = start - Date.now();
   if (ms <= 0) {
-    const live = Date.now() < end, msg = live ? 'Buổi lễ đang diễn ra.' : 'Cảm ơn bạn đã đến.';
+    const live = Date.now() < end, msg = vx(live ? 'Buổi lễ đang diễn ra.' : 'Cảm ơn bạn đã đến.');
     if ($('cdBox').textContent !== msg) $('cdBox').replaceChildren(el('p', 'cd-done grad', msg));
     if (!live) clearInterval(timer); // đang diễn ra thì tiếp tục chạy để tự chuyển sang "Cảm ơn"
     return;
@@ -961,12 +992,13 @@ $('code').append(...[
   ln.append(...toks.map(([c, t]) => c === 'in' ? nameIn : el('span', c, t)));
   return ln;
 }));
+const myPlan = key && Object.values(PLANS).find(p => p.who.includes(key));
+if (myPlan?.early) INVITE.agenda[0] = [myPlan.early, 'Vào hội trường cùng Quân', 'Gửi xe trước, đi bộ vào hội trường'];
 $('agenda').append(...INVITE.agenda.map(([t, w, n]) => {
   const li = el('li', 'reveal'), b = el('div'); b.append(el('b', '', w), el('span', '', n)); li.append(el('time', '', t), b); return li; }));
 
 // Lịch trình riêng: khớp khách với một nhóm trong PLANS; không thuộc nhóm nào thì ẩn mục
-// (tên biến không được là `plan` — sẽ che window.plan của <ol id="plan">)
-const myPlan = key && Object.values(PLANS).find(p => p.who.includes(key));
+// (tên biến không được là `plan` — sẽ che window.plan của <ol id="plan">; myPlan khai báo ở trên, cạnh agenda)
 if (myPlan) {
   $('planSec').hidden = false;
   $('planTtl').append(myPlan.ttl[0], el('br'), el('span', 'grad', myPlan.ttl[1]));
@@ -992,6 +1024,18 @@ if (parks.length) {
     const a = el('a', 'lg', n + ' ↗'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; }));
 }
 
+// Bàn tay pixel: ngón trỏ ở mép trái chỉ lên (không nằm giữa → không bị đọc thành ngón giữa), ba ngón kia gập, ngón cái vắt ngang.
+// Mỗi ký tự = 1 ô; ô liền cùng màu gộp thành 1 <rect>. Đầu ngón trỏ ở cột 5–7 hàng 0 (khớp transform-origin 36% 1%).
+{
+  const C = { K: '#1d1d1f', S: '#f2c29b', L: '#ffdcbf', N: '#ffeede', D: '#d99a78', B: '#0071e3' };
+  $('handSvg').innerHTML = [ // kiểu con trỏ bàn tay quen thuộc: ngón trỏ dựng, 3 ngón bậc thang bên phải, ngón cái bên trái
+    '.....KKK..........', '....KNNSK.........', '....KNNSK.........', '....KLSSK.........', '....KLSSK.........', '....KLSSK.........',
+    '....KLSSK.........', '....KLSSK.........', '....KLSSK.........', '....KLSSKKKK......', '....KLSSKSSKKKK...', '....KLSSKSSKSSKKK.',
+    '.KKKKLSSKSSKSSKSSK', 'KSSSKLSSDSSDSSDSSK', 'KLSSSDSSSSSSSSSSSK', '.KLSSSDSSSSSSSSSSK', '.KLSSSSSSSSSSSSSSK', '..KSSSSSSSSSSSSSSK',
+    '..KSSSSSSSSSSSSSK.', '...KSSSSSSSSSSSK..', '...KKKKKKKKKKKKK..', '...KBBBBBBBBBBBK..', '...KBBBBBBBBBBBK..', '...KBBBBBBBBBBBK..',
+  ].map((r, y) => r.replace(/([KSLNDB])\1*/g, (m, c, x) => `<rect x="${x}" y="${y}" width="${m.length}" height="1.05" fill="${C[c]}"/>`)).join('');
+}
+
 // Hoạt ảnh pixel: chỉ nhúng iframe sau khi bấm (lazy) → trang vào nhanh, không tốn data
 if (INVITE.animUrl) {
   $('animSec').hidden = false;
@@ -999,10 +1043,16 @@ if (INVITE.animUrl) {
   $('animNote').textContent = fun
     ? 'Mình kể lại bốn năm bằng hoạt ảnh pixel. Bấm xem rồi khen nha.'
     : 'Một chút hành trình bốn năm, kể lại bằng hoạt ảnh pixel.';
+  // Hoạt ảnh cùng origin: đổi danh xưng trong đó; gia đình thấy giờ có mặt 07:00 thay vì 10:00
+  const animXung = f => f.addEventListener('load', () => {
+    const d = f.contentDocument; if (!d) return;
+    xungDoc(d.body);
+    if (myPlan?.early) for (const e of d.querySelectorAll('.fin .t, #steps small')) e.textContent = e.textContent.replace('10:00', myPlan.early);
+  });
   // Toàn màn hình: <dialog> trong trang → đóng là về đúng chỗ cũ. Hoạt ảnh chạy hết 1 vòng thì báo 'anim-end' → tự đóng.
   const F = $('full'), canFull = typeof F.showModal === 'function';
   const openFull = () => {
-    const f = el('iframe');
+    const f = el('iframe'); animXung(f);
     Object.assign(f, { src: INVITE.animUrl, title: 'Hoạt ảnh pixel: hành trình bốn năm của ' + INVITE.name });
     F.append(f); F.showModal(); $('fullX').focus();
     // Android: thử toàn màn hình thật + khoá ngang; iPhone không hỗ trợ → CSS tự xoay khung khi máy dọc
@@ -1018,7 +1068,7 @@ if (INVITE.animUrl) {
     if ($('anim').classList.contains('open')) return;
     $('anim').classList.add('open'); $('animPlay').disabled = true; // tay chạm (~.6s) → màn hình phóng to (~1,5s) → nhúng video từ cảnh đầu
     setTimeout(() => {
-      const f = el('iframe');
+      const f = el('iframe'); animXung(f);
       Object.assign(f, { src: INVITE.animUrl, title: 'Hoạt ảnh pixel: hành trình bốn năm của ' + INVITE.name });
       f.allow = 'fullscreen';
       f.onload = () => { $('animPlay').remove(); f.focus(); }; // màn hình phóng to che tới khi iframe tải xong, không lộ khung trống
@@ -1183,6 +1233,7 @@ if (!reduce) {
   const run = on => { if (on && !raf) raf = requestAnimationFrame(loop); else if (!on && raf) { cancelAnimationFrame(raf); raf = 0; } };
   'IntersectionObserver' in window ? new IntersectionObserver(([e]) => run(e.isIntersecting)).observe(heroEl) : run(true);
 }
+xungDoc(document.body); // cuối cùng: mọi chữ đã dựng xong
 </script>
 </body>
 </html>
