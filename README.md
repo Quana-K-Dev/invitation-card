@@ -5,7 +5,7 @@ Trang tĩnh, không build, không backend, deploy Vercel free.
 | File | Việc |
 |---|---|
 | `index.html` | Thiệp mời (toàn bộ trang) |
-| `tot-nghiep-animation.html` | Hoạt ảnh pixel 54 giây, nhúng vào thiệp bằng iframe |
+| `tot-nghiep-animation.html` | Hoạt ảnh pixel 78 giây, nhúng vào thiệp bằng iframe |
 
 ## Thông tin buổi lễ
 - **14/11/2026 — 10h30** (sáng thứ 7), xong lễ là chụp ảnh
@@ -35,20 +35,23 @@ Hai link Google Drive, chọn theo nhóm khách:
 Chỉ nhận URL `https:`; link sai thì ẩn mục, không tạo nút giả.
 
 ## Hoạt ảnh
-Section "Bốn năm trong 54 giây". `iframe` chỉ tải **sau khi bấm** nên trang vào nhanh.
+Section "Bốn năm trong 78 giây". Phong bì đóng; bấm thì nắp lật, thiệp trượt lên, ~1,1s sau mới tải `iframe` nên trang vào nhanh.
 Màn < 735px: bấm mở tab mới (nhúng 16:9 trên màn hẹp thì chữ pixel chỉ còn ~4px, không đọc nổi).
 
-7 cảnh, viết cho người không biết gì về lập trình — không có từ kỹ thuật nào:
+9 cảnh, viết cho người không biết gì về lập trình — không có từ kỹ thuật nào.
+Thời lượng mỗi cảnh ở `data-t` trên `<section>`; thêm/bớt/đổi thứ tự cảnh chỉ cần sửa HTML.
 
 | # | Nội dung |
 |---|---|
-| 1 | Chào, mình là Quân, mình làm ứng dụng điện thoại |
-| 2 | Hành trình 2022 → 2026, người pixel đi dọc đường |
-| 3 | 6 app đã làm, mỗi app một màn hình điện thoại chạy thật |
-| 4 | Một app gồm ba tầng — ví như xây nhà |
-| 5 | Bài tốt nghiệp Struct App, làm một mình |
-| 6 | Hiện tại: Global Safe, dự án Swapy, gặp đối tác FPT và Viettel |
-| 7 | Thiệp mời: ngày giờ, địa điểm |
+| 1 | Chào, mình là Quân, mình làm ứng dụng điện thoại (chữ gõ dần) |
+| 2 | Hành trình 2022 → 2026, người pixel đi dọc đường, trời ngả hoàng hôn |
+| 3 | Một ngày năm cuối: đồng hồ 07:00 → 01:00, trời tối dần |
+| 4 | 6 app đã làm, mỗi app một màn hình điện thoại chạy thật |
+| 5 | Hiện tại: Global Safe, dự án Swapy, gặp đối tác FPT và Viettel |
+| 6 | Swapy: ngón tay chạm đặt lịch |
+| 7 | Cảm ơn: chữ cuộn như credit phim, ảnh polaroid hiện dần |
+| 8 | Thiệp mời: ngày giờ, địa điểm |
+| 9 | Đường tới hội trường: lầu 6, 3 bước |
 
 ### Ảnh đại diện thật
 `avatar.jpg` (900×899, pixel art) đã có sẵn, dùng ở cảnh 1, 6, 7. Xoá file đi thì tự rơi về
@@ -119,7 +122,7 @@ File có thật được serve trước rewrite, nên `/tot-nghiep-animation.htm
 ```
 node check.mjs      # nội dung, link, countdown, .ics, gallery, album, RSVP, hoạt ảnh, lịch riêng (115 checks)
 node audit.mjs      # lỗi UI: tràn ngang, vùng chạm 44px, chữ nhỏ/bị cắt, màn khoá (125 checks, 8 cỡ máy)
-node audit-anim.mjs # hoạt ảnh: 7 cảnh, chữ tràn/bị cắt/quá nhỏ, nút điều khiển
-node shot.mjs       # chụp 7 cảnh ra /tmp/anim-0..6.png để xem bằng mắt
+node audit-anim.mjs # hoạt ảnh: 9 cảnh, chữ tràn/bị cắt/quá nhỏ, nút điều khiển
+node shot.mjs       # chụp 9 cảnh ra /tmp/anim-0..8.png để xem bằng mắt
 ```
 Cần Node 22 + Google Chrome.
