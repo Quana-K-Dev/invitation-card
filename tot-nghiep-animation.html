@@ -43,6 +43,8 @@
   .hello .hi em { font-style:normal; color:var(--yellow); }
   .hello .what { margin-top:22px; font-size:24px; font-weight:700; line-height:1.4; }
   .hello .what b { color:var(--yellow); }
+  .type { display:inline-block; white-space:nowrap; clip-path:inset(0 100% 0 0); animation:type 1.4s steps(34) var(--d,0s) forwards; }
+  @keyframes type { to { clip-path:inset(0 0 0 0); } }
   .hello .ex { margin-top:16px; font-size:17px; color:var(--dim); font-weight:600; line-height:1.5; }
   .hello .chip { margin-top:22px; }
 
@@ -56,6 +58,7 @@
   .ms::after { content:''; position:absolute; left:50%; margin-left:-4px; top:100%; width:8px; height:var(--drop,130px); background:repeating-linear-gradient(var(--ink) 0 6px,transparent 6px 12px); opacity:.5; }
   .dot { position:absolute; top:406px; width:16px; height:16px; margin-left:-8px; background:var(--yellow); box-shadow:0 0 0 4px var(--line); }
     .walker { position:absolute; left:0; top:316px; z-index:5; }
+  .sky { position:absolute; inset:0; background:linear-gradient(transparent 25%,rgba(255,123,84,.28) 75%,rgba(255,209,102,.38)); opacity:0; }
 
   /* Cảnh 2 */
   .phones { position:absolute; left:30px; top:108px;  width:900px; display:flex; }
@@ -111,7 +114,7 @@
   .seg { flex:var(--w); height:14px; padding:0; border:0; cursor:pointer; background:rgba(0,0,0,.45); position:relative; overflow:hidden; }
   .seg i { position:absolute; left:0; top:0; bottom:0; width:0; background:var(--yellow); }
   .seg.done i { width:100%; }
-  @media (prefers-reduced-motion:reduce) { .pop,.arrow { animation-duration:.01s; } .bob,.blink,.fin h1 { animation:none; } }
+  @media (prefers-reduced-motion:reduce) { .pop,.arrow,.type { animation-duration:.01s; } .bob,.blink,.fin h1 { animation:none; } }
 </style>
 </head>
 <body>
@@ -122,13 +125,14 @@
     <div class="avt bob abs" style="left:56px;top:78px;width:340px"><img class="av" alt="Chân dung pixel của Quân"></div>
     <div class="hello">
       <p class="hi pop" style="--d:.3s">Xin chào!<br>Mình là <em>Quân</em></p>
-      <p class="what pop" style="--d:1.3s">Mình làm <b>ứng dụng trên điện thoại</b>.</p>
+      <p class="what"><span class="type" style="--d:1.3s">Mình làm <b>ứng dụng trên điện thoại</b>.</span><span class="blink">_</span></p>
       <p class="ex pop" style="--d:2.4s">Là những ứng dụng bạn chạm vào mỗi ngày: đặt lịch, tìm cửa hàng, xem điểm số, theo dõi bước chân…</p>
       <span class="chip pop" style="--d:3.6s">Lập trình viên ứng dụng di động</span>
     </div>
   </section>
 
   <section class="scene" id="s1">
+    <div class="sky" id="sky"></div>
     <h2 class="title">Bốn năm <em>đã đi qua</em></h2>
     <p class="sub">Từ cậu sinh viên năm nhất đến ngày cầm tấm bằng</p>
     <div class="road"></div>
@@ -308,6 +312,13 @@ function dSwapy(c, f) {
   P(c, 4, 48, 28, 9, done ? '#34d399' : press ? '#8b5cf6' : '#6d28d9');
   if (done) { line(c, 14, 52, 16, 54, '#fff'); line(c, 16, 54, 22, 50, '#fff'); P(c, 24, 52, 5, 1, '#fff'); } else P(c, 11, 52, 14, 1, '#fff');
   if (p >= 33) P(c, 4, 59, 28, 2, '#34d399');
+  // ngón tay chạm: chọn ngày rồi bấm nút
+  const tap = p >= 17 && p < 23 ? [18, 39, p >= 20] : p >= 25 && p < 33 ? [18, 52, p >= 28] : null;
+  if (tap) {
+    const [x, y, hit] = tap, K = '#14141f', S = '#e39a6b', Y = '#ffd166';
+    if (hit) { P(c, x - 3, y - 3, 7, 1, Y); P(c, x - 3, y + 3, 7, 1, Y); P(c, x - 3, y - 3, 1, 7, Y); P(c, x + 3, y - 3, 1, 7, Y); }
+    P(c, x - 1, y, 3, 12, K); P(c, x - 1, y + 5, 7, 7, K); P(c, x, y + 1, 1, 10, S); P(c, x, y + 6, 5, 5, S);
+  }
 }
 
 function iconPhone(c) { P(c, 4, 1, 8, 14, '#14141f'); P(c, 5, 2, 6, 11, '#fbf8ee'); line(c, 6, 8, 7, 9, '#2eb872'); line(c, 7, 9, 10, 5, '#2eb872'); line(c, 6, 9, 7, 10, '#2eb872'); line(c, 7, 10, 10, 6, '#2eb872'); }
@@ -398,6 +409,7 @@ function update(dt) {
   if (i === 1) {
     const x = 60 + 790 * Math.min(1, l / 6.6), moving = l < 6.7, fr = moving ? Math.floor(t * 6) % 2 : 0, cap = l > 6.6, key = fr + '' + cap;
     $('#walker').style.transform = `translateX(${x - 32}px)`;
+    $('#sky').style.opacity = Math.floor(Math.min(1, l / 6.6) * 8) / 8;
     if (key !== lastWalk) { drawWalker(wc, fr, cap); lastWalk = key; }
     MS_X.forEach((mx, k) => { if (x + 12 >= mx) { msEls[k].classList.add('show'); msDots[k].style.visibility = 'visible'; } });
   }
