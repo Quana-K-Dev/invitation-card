@@ -1047,6 +1047,8 @@ if (INVITE.animUrl) {
   const animXung = f => f.addEventListener('load', () => {
     const d = f.contentDocument; if (!d) return;
     xungDoc(d.body);
+    // phụ đề lời dẫn dựng lúc chạy từ NARR: đổi phần hiển thị (trước "|"); phần sau "|" là giọng đọc mp3 có sẵn, giữ nguyên
+    try { const N = f.contentWindow.eval('NARR'); for (const k in N) N[k] = N[k].map(s => { const [a, ...b] = s.split('|'); return [vx(myPlan?.early ? a.replace('10 giờ', '7 giờ') : a), ...b].join('|'); }); } catch {}
     if (myPlan?.early) for (const e of d.querySelectorAll('.fin .t, #steps small')) e.textContent = e.textContent.replace('10:00', myPlan.early);
   });
   // Toàn màn hình: <dialog> trong trang → đóng là về đúng chỗ cũ. Hoạt ảnh chạy hết 1 vòng thì báo 'anim-end' → tự đóng.
