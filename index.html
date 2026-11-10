@@ -1056,6 +1056,7 @@ if (INVITE.animUrl) {
   const openFull = () => {
     const f = el('iframe'); animXung(f);
     Object.assign(f, { src: INVITE.animUrl, title: 'Hoạt ảnh pixel: hành trình bốn năm của ' + INVITE.name });
+    f.allow = 'autoplay; fullscreen'; // cho hoạt ảnh tự phát tiếng (khách vừa bấm nút)
     F.append(f); F.showModal(); $('fullX').focus();
     // Android: thử toàn màn hình thật + khoá ngang; iPhone không hỗ trợ → CSS tự xoay khung khi máy dọc
     F.requestFullscreen?.().then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
@@ -1071,7 +1072,7 @@ if (INVITE.animUrl) {
     setTimeout(() => {
       const f = el('iframe'); animXung(f);
       Object.assign(f, { src: INVITE.animUrl, title: 'Hoạt ảnh pixel: hành trình bốn năm của ' + INVITE.name });
-      f.allow = 'fullscreen';
+      f.allow = 'autoplay; fullscreen'; // cho hoạt ảnh tự phát tiếng (khách vừa chạm điện thoại)
       f.onload = () => { $('animPlay').remove(); f.focus(); }; // màn hình phóng to che tới khi iframe tải xong, không lộ khung trống
       $('anim').prepend(f);
     }, reduce ? 0 : 1500);

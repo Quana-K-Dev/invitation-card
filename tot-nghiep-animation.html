@@ -696,10 +696,11 @@ function syncBtns() {
   bVoi.textContent = 'LỜI DẪN: ' + (AUD.voice ? 'BẬT' : 'TẮT'); bVoi.setAttribute('aria-pressed', AUD.voice);
   hintEl.hidden = AUD.on || !hintScene;
 }
-function enableSound() {
+function enableSound(restart = true) {
   audioInit(); if (!AUD.ctx) return;
   AUD.ctx.resume(); AUD.on = true;
-  loadVoices(); startMusic(); syncBtns(); seek(0); setPlay(true, true);
+  loadVoices(); startMusic(); syncBtns();
+  if (restart) { seek(0); setPlay(true, true); } else narrated = -1; // tự bật giữa chừng: đọc lời dẫn cảnh hiện tại, không tua lại
 }
 function disableSound() { AUD.on = false; stopNarr(); if (AUD.timer) { clearInterval(AUD.timer); AUD.timer = null; } syncBtns(); }
 bSnd.onclick = () => AUD.on ? disableSound() : enableSound();
@@ -772,6 +773,18 @@ addEventListener('resize', fit); fit();
 if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { if (e.isIntersecting) { if (!userPaused && !reduce) setPlay(true); } else setPlay(false); }, { threshold: .1 }).observe($('#wrap'));
 setPlay(!reduce, false); userPaused = reduce;
 requestAnimationFrame(frame);
+// Mặc định bật âm thanh + lời dẫn. Trình duyệt chặn phát tiếng khi trang chưa được chạm (iPhone hay chặn)
+// → chạm / bấm phím đầu tiên ở bất kỳ đâu (trừ nút điều khiển) sẽ bật. Nút ÂM THANH vẫn tắt được.
+if (!reduce) {
+  audioInit();
+  AUD.ctx?.resume().then(() => { if (!AUD.on && AUD.ctx.state === 'running') enableSound(false); }).catch(() => {});
+  const first = e => {
+    if (e.target.closest?.('.hud, #hint')) return; // để nút tự xử lý, tránh bật rồi tắt ngay
+    removeEventListener('pointerdown', first, true); removeEventListener('keydown', first, true);
+    if (!AUD.on) enableSound(false);
+  };
+  addEventListener('pointerdown', first, true); addEventListener('keydown', first, true);
+}
 </script>
 </body>
 </html>
